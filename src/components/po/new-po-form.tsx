@@ -1,0 +1,340 @@
+"use client";
+
+import { useForm, useFieldArray, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useTransition, useRef, useState } from "react";
+import { createDocument, updateDocument, type ActionResult } from "@/lib/actions/documents";
+import { CreateDocumentSchema, type CreateDocumentInput } from "@/lib/schemas/documents";
+import type { Supplier } from "@prisma/client";
+import SummaryRail from "./summary-rail";
+import SupplierCombobox from "./supplier-combobox";
+
+type Props = {
+  suppliers: Supplier[];
+  initialData?: {
+    documentId: string;
+    supplierId: string;
+    notes?: string | null;
+    items: Array<{ name: string; qty: number; rate: number; taxPercent?: number }>;
+  };
+};
+
+const DEFAULT_ITEM = { name: "", qty: 1, rate: 0, taxPercent: 0 };
+
+export default function NewPoForm({ suppliers, initialData }: Props) {
+  const [isPending, startTransition] = useTransition();
+  const [serverError, setServerError] = useState<string | null>(null);
+
+  const isEditing = Boolean(initialData?.documentId);
+
+  // Store refs for each row's inputs to handle sequential Enter key navigation
+  const rowInputRefs = useRef<
+    Record<number, { name?: HTMLInputElement; qty?: HTMLInputElement; rate?: HTMLInputElement }>
+  >({});
+
+  const form = useForm<CreateDocumentInput>({
+    resolver: zodResolver(CreateDocumentSchema),
+    defaultValues: {
+      supplierId: initialData?.supplierId || "",
+      notes: initialData?.notes || "",
+      items: initialData?.items && initialData.items.length > 0
+        ? initialData.items.map((i) => ({
+            name: i.name,
+            qty: Number(i.qty) || 1,
+            rate: Number(i.rate) || 0,
+            taxPercent: Number(i.taxPercent) || 0,
+          }))
+        : [DEFAULT_ITEM],
+    },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "items",
+  });
+
+  const items = form.watch("items");
+
+  // Live totals — computed client-side for display only
+  const totals = computeDisplayTotals(items);
+
+  function setInputRef(index: number, field: "name" | "qty" | "rate", el: HTMLInputElement | null) {
+    if (!rowInputRefs.current[index]) {
+      rowInputRefs.current[index] = {};
+    }
+    if (el) {
+      rowInputRefs.current[index][field] = el;
+    }
+  }
+
+  function focusInput(index: number, field: "name" | "qty" | "rate") {
+    const el = rowInputRefs.current[index]?.[field];
+    if (el) {
+      el.focus();
+      if (field === "qty" || field === "rate") {
+        el.select();
+      }
+    }
+  }
+
+  function addRow() {
+    append({ name: "", qty: 1, rate: 0, taxPercent: 0 });
+    const nextIdx = fields.length;
+    setTimeout(() => focusInput(nextIdx, "name"), 50);
+  }
+
+  function handleNameKeyDown(e: React.KeyboardEvent<HTMLInputElement>, idx: number) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      focusInput(idx, "qty");
+    }
+  }
+
+  function handleQtyKeyDown(e: React.KeyboardEvent<HTMLInputElement>, idx: number) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      focusInput(idx, "rate");
+    }
+  }
+
+  function handleRateKeyDown(e: React.KeyboardEvent<HTMLInputElement>, idx: number) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const currentName = form.getValues(`items.${idx}.name`);
+
+      if (currentName && currentName.trim().length > 0) {
+        append({ name: "", qty: 1, rate: 0, taxPercent: 0 });
+        setTimeout(() => focusInput(idx + 1, "name"), 50);
+      } else {
+        if (fields.length > 1) {
+          remove(idx);
+        }
+        setTimeout(() => {
+          form.handleSubmit(handleSubmit)();
+        }, 50);
+      }
+    }
+  }
+
+  function handleSubmit(data: CreateDocumentInput) {
+    setServerError(null);
+    startTransition(async () => {
+      let result: ActionResult;
+      if (isEditing && initialData?.documentId) {
+        result = await updateDocument(initialData.documentId, data);
+      } else {
+        result = await createDocument(data);
+      }
+
+      if (!result.success) {
+        setServerError(result.error);
+      }
+    });
+  }
+
+  return (
+    <form onSubmit={form.handleSubmit(handleSubmit)}>
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
+        {/* ── Left pane ─────────────────────────────────── */}
+        <div className="flex-1 min-w-0 space-y-6 w-full">
+          {/* Error banner */}
+          {serverError && (
+            <div
+              className="px-4 py-3 rounded-lg text-sm border"
+              style={{ background: "#FEF2F2", borderColor: "#FCA5A5", color: "#B91C1C" }}
+            >
+              {serverError}
+            </div>
+          )}
+
+          {/* Supplier */}
+          <div>
+            <label className="block text-sm font-medium mb-1.5">
+              Supplier <span style={{ color: "var(--brass)" }}>*</span>
+            </label>
+            <Controller
+              control={form.control}
+              name="supplierId"
+              render={({ field }) => (
+                <SupplierCombobox
+                  suppliers={suppliers}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onEnterNext={() => focusInput(0, "name")}
+                />
+              )}
+            />
+            {form.formState.errors.supplierId && (
+              <p className="mt-1 text-xs font-medium" style={{ color: "#EF4444" }}>
+                {form.formState.errors.supplierId.message}
+              </p>
+            )}
+          </div>
+
+          {/* Line items */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm font-medium">
+                Line items <span style={{ color: "var(--brass)" }}>*</span>
+              </label>
+              <button
+                type="button"
+                onClick={addRow}
+                className="text-xs font-medium cursor-pointer transition-colors hover:underline"
+                style={{ color: "var(--accent)" }}
+              >
+                + Add row
+              </button>
+            </div>
+
+            {/* Table */}
+            <div
+              className="rounded-xl border overflow-x-auto"
+              style={{ borderColor: "var(--border)" }}
+            >
+              <table className="w-full text-sm min-w-[500px]">
+                <thead>
+                  <tr style={{ background: "var(--surface-raised)", borderBottom: "1px solid var(--border)" }}>
+                    <th className="text-left px-3 py-2.5 text-xs font-medium" style={{ color: "var(--muted-foreground)", width: "50%" }}>Description</th>
+                    <th className="text-right px-3 py-2.5 text-xs font-medium" style={{ color: "var(--muted-foreground)", width: "16%" }}>Qty</th>
+                    <th className="text-right px-3 py-2.5 text-xs font-medium" style={{ color: "var(--muted-foreground)", width: "18%" }}>Rate</th>
+                    <th className="text-right px-3 py-2.5 text-xs font-medium" style={{ color: "var(--muted-foreground)", width: "16%" }}>Total</th>
+                    <th className="px-2 py-2.5" style={{ width: "4%" }} />
+                  </tr>
+                </thead>
+                <tbody>
+                  {fields.map((field, idx) => {
+                    const item = items[idx] ?? DEFAULT_ITEM;
+                    const lineGross = (Number(item.qty) || 0) * (Number(item.rate) || 0);
+
+                    const { ref: nameRegRef, ...nameProps } = form.register(`items.${idx}.name`);
+                    const { ref: qtyRegRef, ...qtyProps } = form.register(`items.${idx}.qty`, { valueAsNumber: true });
+                    const { ref: rateRegRef, ...rateProps } = form.register(`items.${idx}.rate`, { valueAsNumber: true });
+
+                    return (
+                      <tr
+                        key={field.id}
+                        style={{ borderTop: idx > 0 ? "1px solid var(--border)" : undefined }}
+                      >
+                        {/* Description */}
+                        <td className="px-3 py-2">
+                          <input
+                            {...nameProps}
+                            ref={(e) => {
+                              nameRegRef(e);
+                              setInputRef(idx, "name", e);
+                            }}
+                            onKeyDown={(e) => handleNameKeyDown(e, idx)}
+                            placeholder="Item description & part number"
+                            className="w-full px-2.5 py-1.5 rounded-md border text-sm outline-none transition-all focus:border-accent"
+                            style={{
+                              borderColor: form.formState.errors.items?.[idx]?.name ? "#EF4444" : "var(--border)",
+                              background: "var(--surface)",
+                              color: "var(--foreground)",
+                            }}
+                          />
+                          {form.formState.errors.items?.[idx]?.name && (
+                            <p className="text-[11px] mt-0.5 font-medium" style={{ color: "#EF4444" }}>
+                              {form.formState.errors.items[idx]?.name?.message}
+                            </p>
+                          )}
+                        </td>
+
+                        {/* Qty */}
+                        <td className="px-3 py-2">
+                          <input
+                            {...qtyProps}
+                            ref={(e) => {
+                              qtyRegRef(e);
+                              setInputRef(idx, "qty", e);
+                            }}
+                            type="number"
+                            step="any"
+                            min="0.0001"
+                            onKeyDown={(e) => handleQtyKeyDown(e, idx)}
+                            className="w-full px-2.5 py-1.5 rounded-md border text-sm text-right outline-none font-mono-nums focus:border-accent"
+                            style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
+                          />
+                        </td>
+
+                        {/* Rate */}
+                        <td className="px-3 py-2">
+                          <input
+                            {...rateProps}
+                            ref={(e) => {
+                              rateRegRef(e);
+                              setInputRef(idx, "rate", e);
+                            }}
+                            type="number"
+                            step="any"
+                            min="0"
+                            onKeyDown={(e) => handleRateKeyDown(e, idx)}
+                            className="w-full px-2.5 py-1.5 rounded-md border text-sm text-right outline-none font-mono-nums focus:border-accent"
+                            style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
+                          />
+                        </td>
+
+                        {/* Line total */}
+                        <td className="px-3 py-2 text-right font-mono-nums text-sm font-semibold" style={{ color: "var(--foreground)" }}>
+                          {formatAmount(lineGross)}
+                        </td>
+
+                        {/* Remove */}
+                        <td className="px-2.5 py-2 text-center">
+                          {fields.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => remove(idx)}
+                              className="w-6 h-6 rounded-full flex items-center justify-center cursor-pointer transition-colors hover:bg-surface-raised"
+                              style={{ color: "var(--muted-foreground)" }}
+                            >
+                              ✕
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Notes */}
+          <div>
+            <label htmlFor="po-notes" className="block text-sm font-medium mb-1.5">
+              Notes <span className="text-xs font-normal" style={{ color: "var(--muted-foreground)" }}>(optional)</span>
+            </label>
+            <textarea
+              id="po-notes"
+              {...form.register("notes")}
+              placeholder="Payment terms, delivery instructions, etc."
+              rows={3}
+              className="w-full px-3 py-2.5 rounded-lg border text-sm outline-none resize-none"
+              style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
+            />
+          </div>
+        </div>
+
+        {/* ── Summary Rail ──────────────────────────────── */}
+        <SummaryRail totals={totals} isPending={isPending} isEditing={isEditing} />
+      </div>
+    </form>
+  );
+}
+
+function computeDisplayTotals(items: CreateDocumentInput["items"]) {
+  let subtotal = 0;
+  for (const item of items) {
+    const lineSubtotal = (Number(item.qty) || 0) * (Number(item.rate) || 0);
+    subtotal += lineSubtotal;
+  }
+  return { subtotal, totalTax: 0, total: subtotal };
+}
+
+function formatAmount(amount: number) {
+  return amount.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}

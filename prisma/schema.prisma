@@ -1,0 +1,114 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  STAFF
+}
+
+enum DocumentType {
+  PO
+  QUOTATION
+}
+
+enum DocumentStatus {
+  DRAFT
+  SENT
+  CANCELLED
+}
+
+// ─── Models ──────────────────────────────────────────────────
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  role      Role     @default(STAFF)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  documents Document[]
+
+  @@map("users")
+}
+
+model Supplier {
+  id        String   @id @default(uuid())
+  name      String
+  address   String?
+  phone     String?
+  email     String?
+  taxId     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  documents Document[]
+
+  @@map("suppliers")
+}
+
+model Document {
+  id     String         @id @default(uuid())
+  type   DocumentType   @default(PO)
+  number String         @unique
+  status DocumentStatus @default(DRAFT)
+
+  // Live relations
+  supplierId  String
+  supplier    Supplier @relation(fields: [supplierId], references: [id])
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
+
+  notes String?
+
+  // Supplier snapshot — populated at send time to preserve historical accuracy
+  // even if the supplier's details change later
+  snapshotSupplierName    String?
+  snapshotSupplierAddress String?
+  snapshotSupplierEmail   String?
+  snapshotSupplierPhone   String?
+  snapshotSupplierTaxId   String?
+
+  items DocumentItem[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  sentAt    DateTime?
+
+  @@map("documents")
+}
+
+model DocumentItem {
+  id         String @id @default(uuid())
+  documentId String
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  name       String
+  qty        Decimal @db.Decimal(12, 4)
+  rate       Decimal @db.Decimal(12, 4)
+  taxPercent Decimal @default(0) @db.Decimal(5, 2)
+
+  @@map("document_items")
+}
+
+/// Simple ever-incrementing counter for PO numbers (PO-1, PO-2, …)
+/// One row per sequence name. Lock the row inside a transaction to avoid collisions.
+model PoSequence {
+  name    String @id
+  current Int    @default(0)
+
+  @@map("po_sequence")
+}

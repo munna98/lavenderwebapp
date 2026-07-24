@@ -1,0 +1,121 @@
+@import "tailwindcss";
+
+/* ─── Design Tokens ─────────────────────────────────────────── */
+:root {
+  /* Brand */
+  --accent: #1F5C4E;
+  --accent-hover: #174d41;
+  --accent-soft: #E6EEE9;
+  --accent-soft-hover: #d4e4d9;
+  --brass: #B8862E;
+  --brass-soft: #F7F0E3;
+
+  /* Neutrals */
+  --background: #FAFAF8;
+  --surface: #FFFFFF;
+  --surface-raised: #F5F4F0;
+  --border: #E4E2DC;
+  --border-strong: #C8C5BD;
+
+  /* Text */
+  --foreground: #1A1917;
+  --muted-foreground: #70766F;
+  --muted-foreground-soft: #9BA09A;
+
+  /* Status */
+  --status-draft-bg: #F5F4F0;
+  --status-draft-text: #70766F;
+  --status-sent-bg: #E6EEE9;
+  --status-sent-text: #1F5C4E;
+  --status-cancelled-bg: #FEF2F2;
+  --status-cancelled-text: #B91C1C;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px 0 rgba(0,0,0,0.06);
+  --shadow-lg: 0 8px 24px 0 rgba(0,0,0,0.08);
+
+  /* Radii */
+  --radius: 0.5rem;
+  --radius-sm: 0.375rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+
+  /* Fonts */
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-ibm-plex-mono);
+}
+
+/* ─── Tailwind Theme Extension ──────────────────────────────── */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-brass: var(--brass);
+  --color-brass-soft: var(--brass-soft);
+  --color-muted: var(--muted-foreground);
+  --color-muted-soft: var(--muted-foreground-soft);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-ibm-plex-mono);
+}
+
+/* ─── Base ──────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+/* ─── Focus Rings ───────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ─── Scrollbar ─────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
+/* ─── Typography Utilities ──────────────────────────────────── */
+.font-mono-nums {
+  font-family: var(--font-mono), monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Selection ─────────────────────────────────────────────── */
+::selection {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
