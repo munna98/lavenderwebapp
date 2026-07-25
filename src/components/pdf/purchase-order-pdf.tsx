@@ -105,32 +105,12 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 8,
   },
-  colDesc: { width: "55%" },
-  colQty: { width: "15%", textAlign: "right" },
-  colRate: { width: "15%", textAlign: "right" },
-  colTotal: { width: "15%", textAlign: "right" },
+  colSlNo: { width: "6%", textAlign: "center" },
+  colPartNo: { width: "30%" },
+  colDesc: { width: "42%" },
+  colQty: { width: "10%", textAlign: "right" },
+  colRate: { width: "12%", textAlign: "right" },
 
-  totalsContainer: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    marginBottom: 24,
-  },
-  totalsBox: {
-    width: "40%",
-  },
-  grandTotalRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    borderTopWidth: 1,
-    borderTopColor: "#1F5C4E",
-    paddingTop: 6,
-    marginTop: 4,
-  },
-  grandTotalText: {
-    fontSize: 11,
-    fontWeight: "bold",
-    color: "#1F5C4E",
-  },
   notesSection: {
     borderTopWidth: 1,
     borderTopColor: "#E4E2DC",
@@ -151,7 +131,7 @@ const styles = StyleSheet.create({
   },
 });
 
-export default function PurchaseOrderPdf({ document: doc, totals }: Props) {
+export default function PurchaseOrderPdf({ document: doc }: Props) {
   const supplierName = doc.snapshotSupplierName || doc.supplier.name;
   const supplierAddress = doc.snapshotSupplierAddress || doc.supplier.address;
   const supplierPhone = doc.snapshotSupplierPhone || doc.supplier.phone;
@@ -201,36 +181,27 @@ export default function PurchaseOrderPdf({ document: doc, totals }: Props) {
         {/* Line Items Table */}
         <View style={styles.table}>
           <View style={styles.tableHeader}>
-            <Text style={styles.colDesc}>Item Description</Text>
+            <Text style={styles.colSlNo}>#</Text>
+            <Text style={styles.colPartNo}>Part #</Text>
+            <Text style={styles.colDesc}>Description</Text>
             <Text style={styles.colQty}>Qty</Text>
             <Text style={styles.colRate}>Rate</Text>
-            <Text style={styles.colTotal}>Total</Text>
           </View>
 
           {doc.items.map((item, idx) => {
             const qty = Number(item.qty);
             const rate = Number(item.rate);
-            const lineGross = qty * rate;
 
             return (
               <View key={item.id || idx} style={styles.tableRow}>
-                <Text style={styles.colDesc}>{item.name}</Text>
+                <Text style={styles.colSlNo}>{idx + 1}</Text>
+                <Text style={styles.colPartNo}>{item.partNumber}</Text>
+                <Text style={styles.colDesc}>{item.name || "—"}</Text>
                 <Text style={styles.colQty}>{qty.toString()}</Text>
                 <Text style={styles.colRate}>{rate.toFixed(2)}</Text>
-                <Text style={styles.colTotal}>{lineGross.toFixed(2)}</Text>
               </View>
             );
           })}
-        </View>
-
-        {/* Totals */}
-        <View style={styles.totalsContainer}>
-          <View style={styles.totalsBox}>
-            <View style={styles.grandTotalRow}>
-              <Text style={styles.grandTotalText}>Total Amount:</Text>
-              <Text style={styles.grandTotalText}>{totals.totalFormatted}</Text>
-            </View>
-          </View>
         </View>
 
         {/* Notes */}

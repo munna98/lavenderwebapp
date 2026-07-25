@@ -1,7 +1,11 @@
 import { z } from "zod";
 
 export const LineItemSchema = z.object({
-  name: z.string().min(1, "Item description is required"),
+  partNumber: z
+    .string()
+    .transform((val) => val.replace(/\s+/g, ""))
+    .pipe(z.string().min(1, "Part number is required")),
+  name: z.string(),
   qty: z.number().min(0.0001, "Quantity must be greater than 0"),
   rate: z.number().min(0, "Rate cannot be negative"),
   taxPercent: z.number(),

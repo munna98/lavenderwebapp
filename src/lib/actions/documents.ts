@@ -62,7 +62,8 @@ export async function createDocument(
           notes: notes || null,
           items: {
             create: items.map((item) => ({
-              name: item.name,
+              partNumber: item.partNumber,
+              name: item.name || "",
               qty: new Decimal(item.qty).toFixed(4),
               rate: new Decimal(item.rate).toFixed(4),
               taxPercent: new Decimal(item.taxPercent || 0).toFixed(2),
@@ -132,7 +133,8 @@ export async function updateDocument(
           notes: notes || null,
           items: {
             create: items.map((item) => ({
-              name: item.name,
+              partNumber: item.partNumber,
+              name: item.name || "",
               qty: new Decimal(item.qty).toFixed(4),
               rate: new Decimal(item.rate).toFixed(4),
               taxPercent: new Decimal(item.taxPercent || 0).toFixed(2),

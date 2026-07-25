@@ -15,11 +15,11 @@ type Props = {
     documentId: string;
     supplierId: string;
     notes?: string | null;
-    items: Array<{ name: string; qty: number; rate: number; taxPercent?: number }>;
+    items: Array<{ partNumber: string; name?: string | null; qty: number; rate: number; taxPercent?: number }>;
   };
 };
 
-const DEFAULT_ITEM = { name: "", qty: 1, rate: 0, taxPercent: 0 };
+const DEFAULT_ITEM = { partNumber: "", name: "", qty: 1, rate: 0, taxPercent: 0 };
 
 export default function NewPoForm({ suppliers, initialData }: Props) {
   const [isPending, startTransition] = useTransition();
@@ -27,9 +27,8 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
 
   const isEditing = Boolean(initialData?.documentId);
 
-  // Store refs for each row's inputs to handle sequential Enter key navigation
   const rowInputRefs = useRef<
-    Record<number, { name?: HTMLInputElement; qty?: HTMLInputElement; rate?: HTMLInputElement }>
+    Record<number, { partNumber?: HTMLInputElement; name?: HTMLInputElement; qty?: HTMLInputElement; rate?: HTMLInputElement }>
   >({});
 
   const form = useForm<CreateDocumentInput>({
@@ -39,7 +38,8 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
       notes: initialData?.notes || "",
       items: initialData?.items && initialData.items.length > 0
         ? initialData.items.map((i) => ({
-            name: i.name,
+            partNumber: (i.partNumber || "").replace(/\s+/g, ""),
+            name: i.name || "",
             qty: Number(i.qty) || 1,
             rate: Number(i.rate) || 0,
             taxPercent: Number(i.taxPercent) || 0,
@@ -55,10 +55,9 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
 
   const items = form.watch("items");
 
-  // Live totals — computed client-side for display only
   const totals = computeDisplayTotals(items);
 
-  function setInputRef(index: number, field: "name" | "qty" | "rate", el: HTMLInputElement | null) {
+  function setInputRef(index: number, field: "partNumber" | "name" | "qty" | "rate", el: HTMLInputElement | null) {
     if (!rowInputRefs.current[index]) {
       rowInputRefs.current[index] = {};
     }
@@ -67,7 +66,7 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
     }
   }
 
-  function focusInput(index: number, field: "name" | "qty" | "rate") {
+  function focusInput(index: number, field: "partNumber" | "name" | "qty" | "rate") {
     const el = rowInputRefs.current[index]?.[field];
     if (el) {
       el.focus();
@@ -78,9 +77,16 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
   }
 
   function addRow() {
-    append({ name: "", qty: 1, rate: 0, taxPercent: 0 });
+    append({ partNumber: "", name: "", qty: 1, rate: 0, taxPercent: 0 });
     const nextIdx = fields.length;
-    setTimeout(() => focusInput(nextIdx, "name"), 50);
+    setTimeout(() => focusInput(nextIdx, "partNumber"), 50);
+  }
+
+  function handlePartNumberKeyDown(e: React.KeyboardEvent<HTMLInputElement>, idx: number) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      focusInput(idx, "name");
+    }
   }
 
   function handleNameKeyDown(e: React.KeyboardEvent<HTMLInputElement>, idx: number) {
@@ -100,11 +106,11 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
   function handleRateKeyDown(e: React.KeyboardEvent<HTMLInputElement>, idx: number) {
     if (e.key === "Enter") {
       e.preventDefault();
-      const currentName = form.getValues(`items.${idx}.name`);
+      const currentPartNo = form.getValues(`items.${idx}.partNumber`);
 
-      if (currentName && currentName.trim().length > 0) {
-        append({ name: "", qty: 1, rate: 0, taxPercent: 0 });
-        setTimeout(() => focusInput(idx + 1, "name"), 50);
+      if (currentPartNo && currentPartNo.trim().length > 0) {
+        append({ partNumber: "", name: "", qty: 1, rate: 0, taxPercent: 0 });
+        setTimeout(() => focusInput(idx + 1, "partNumber"), 50);
       } else {
         if (fields.length > 1) {
           remove(idx);
@@ -160,7 +166,7 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
                   suppliers={suppliers}
                   value={field.value}
                   onChange={field.onChange}
-                  onEnterNext={() => focusInput(0, "name")}
+                  onEnterNext={() => focusInput(0, "partNumber")}
                 />
               )}
             />
@@ -192,13 +198,15 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
               className="rounded-xl border overflow-x-auto"
               style={{ borderColor: "var(--border)" }}
             >
-              <table className="w-full text-sm min-w-[500px]">
+              <table className="w-full text-sm min-w-[640px]">
                 <thead>
                   <tr style={{ background: "var(--surface-raised)", borderBottom: "1px solid var(--border)" }}>
-                    <th className="text-left px-3 py-2.5 text-xs font-medium" style={{ color: "var(--muted-foreground)", width: "50%" }}>Description</th>
-                    <th className="text-right px-3 py-2.5 text-xs font-medium" style={{ color: "var(--muted-foreground)", width: "16%" }}>Qty</th>
-                    <th className="text-right px-3 py-2.5 text-xs font-medium" style={{ color: "var(--muted-foreground)", width: "18%" }}>Rate</th>
-                    <th className="text-right px-3 py-2.5 text-xs font-medium" style={{ color: "var(--muted-foreground)", width: "16%" }}>Total</th>
+                    <th className="text-center px-2 py-2.5 text-xs font-medium" style={{ color: "var(--muted-foreground)", width: "6%" }}>#</th>
+                    <th className="text-left px-3 py-2.5 text-xs font-medium" style={{ color: "var(--muted-foreground)", width: "24%" }}>Part # <span style={{ color: "var(--brass)" }}>*</span></th>
+                    <th className="text-left px-3 py-2.5 text-xs font-medium" style={{ color: "var(--muted-foreground)", width: "32%" }}>Description</th>
+                    <th className="text-right px-3 py-2.5 text-xs font-medium" style={{ color: "var(--muted-foreground)", width: "11%" }}>Qty</th>
+                    <th className="text-right px-3 py-2.5 text-xs font-medium" style={{ color: "var(--muted-foreground)", width: "13%" }}>Rate</th>
+                    <th className="text-right px-3 py-2.5 text-xs font-medium" style={{ color: "var(--muted-foreground)", width: "10%" }}>Total</th>
                     <th className="px-2 py-2.5" style={{ width: "4%" }} />
                   </tr>
                 </thead>
@@ -207,6 +215,7 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
                     const item = items[idx] ?? DEFAULT_ITEM;
                     const lineGross = (Number(item.qty) || 0) * (Number(item.rate) || 0);
 
+                    const { ref: partNoRegRef, onChange: partNoRegOnChange, ...partNoProps } = form.register(`items.${idx}.partNumber`);
                     const { ref: nameRegRef, ...nameProps } = form.register(`items.${idx}.name`);
                     const { ref: qtyRegRef, ...qtyProps } = form.register(`items.${idx}.qty`, { valueAsNumber: true });
                     const { ref: rateRegRef, ...rateProps } = form.register(`items.${idx}.rate`, { valueAsNumber: true });
@@ -216,7 +225,40 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
                         key={field.id}
                         style={{ borderTop: idx > 0 ? "1px solid var(--border)" : undefined }}
                       >
-                        {/* Description */}
+                        {/* Sl No. */}
+                        <td className="px-2 py-2 text-center text-xs font-mono-nums font-semibold" style={{ color: "var(--muted-foreground)" }}>
+                          {idx + 1}
+                        </td>
+
+                        {/* Part # (Auto-strips all whitespace on input) */}
+                        <td className="px-3 py-2">
+                          <input
+                            {...partNoProps}
+                            onChange={(e) => {
+                              e.target.value = e.target.value.replace(/\s+/g, "");
+                              partNoRegOnChange(e);
+                            }}
+                            ref={(e) => {
+                              partNoRegRef(e);
+                              setInputRef(idx, "partNumber", e);
+                            }}
+                            onKeyDown={(e) => handlePartNumberKeyDown(e, idx)}
+                            placeholder="Part number"
+                            className="w-full px-2.5 py-1.5 rounded-md border text-sm font-mono-nums outline-none transition-all focus:border-accent"
+                            style={{
+                              borderColor: form.formState.errors.items?.[idx]?.partNumber ? "#EF4444" : "var(--border)",
+                              background: "var(--surface)",
+                              color: "var(--foreground)",
+                            }}
+                          />
+                          {form.formState.errors.items?.[idx]?.partNumber && (
+                            <p className="text-[11px] mt-0.5 font-medium" style={{ color: "#EF4444" }}>
+                              {form.formState.errors.items[idx]?.partNumber?.message}
+                            </p>
+                          )}
+                        </td>
+
+                        {/* Description (Optional) */}
                         <td className="px-3 py-2">
                           <input
                             {...nameProps}
@@ -225,19 +267,14 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
                               setInputRef(idx, "name", e);
                             }}
                             onKeyDown={(e) => handleNameKeyDown(e, idx)}
-                            placeholder="Item description & part number"
+                            placeholder="Description (optional)"
                             className="w-full px-2.5 py-1.5 rounded-md border text-sm outline-none transition-all focus:border-accent"
                             style={{
-                              borderColor: form.formState.errors.items?.[idx]?.name ? "#EF4444" : "var(--border)",
+                              borderColor: "var(--border)",
                               background: "var(--surface)",
                               color: "var(--foreground)",
                             }}
                           />
-                          {form.formState.errors.items?.[idx]?.name && (
-                            <p className="text-[11px] mt-0.5 font-medium" style={{ color: "#EF4444" }}>
-                              {form.formState.errors.items[idx]?.name?.message}
-                            </p>
-                          )}
                         </td>
 
                         {/* Qty */}

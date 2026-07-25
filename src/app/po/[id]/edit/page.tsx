@@ -33,12 +33,10 @@ export default async function EditPoPage({
 
   if (!doc) notFound();
 
-  // Protect integrity: Only DRAFT status can be edited
   if (doc.status !== "DRAFT") {
     redirect(`/po/${id}`);
   }
 
-  // Security check: Only creator or ADMIN can edit
   const canEdit = auth.role === "ADMIN" || doc.createdById === auth.user.id;
   if (!canEdit) {
     redirect(`/po/${id}`);
@@ -53,7 +51,8 @@ export default async function EditPoPage({
     supplierId: doc.supplierId,
     notes: doc.notes,
     items: doc.items.map((i) => ({
-      name: i.name,
+      partNumber: i.partNumber,
+      name: i.name || "",
       qty: Number(i.qty),
       rate: Number(i.rate),
       taxPercent: Number(i.taxPercent || 0),

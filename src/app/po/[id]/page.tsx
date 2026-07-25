@@ -142,10 +142,12 @@ export default async function PoDetailPage({
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ background: "var(--surface-raised)", borderBottom: "1px solid var(--border)" }}>
-                  <th className="text-left px-4 py-3 font-medium text-xs uppercase" style={{ color: "var(--muted-foreground)", width: "55%" }}>Description</th>
-                  <th className="text-right px-4 py-3 font-medium text-xs uppercase" style={{ color: "var(--muted-foreground)", width: "15%" }}>Qty</th>
-                  <th className="text-right px-4 py-3 font-medium text-xs uppercase" style={{ color: "var(--muted-foreground)", width: "15%" }}>Rate</th>
-                  <th className="text-right px-4 py-3 font-medium text-xs uppercase" style={{ color: "var(--muted-foreground)", width: "15%" }}>Total</th>
+                  <th className="text-center px-3 py-3 font-medium text-xs uppercase" style={{ color: "var(--muted-foreground)", width: "8%" }}>#</th>
+                  <th className="text-left px-4 py-3 font-medium text-xs uppercase" style={{ color: "var(--muted-foreground)", width: "27%" }}>Part #</th>
+                  <th className="text-left px-4 py-3 font-medium text-xs uppercase" style={{ color: "var(--muted-foreground)", width: "35%" }}>Description</th>
+                  <th className="text-right px-4 py-3 font-medium text-xs uppercase" style={{ color: "var(--muted-foreground)", width: "10%" }}>Qty</th>
+                  <th className="text-right px-4 py-3 font-medium text-xs uppercase" style={{ color: "var(--muted-foreground)", width: "10%" }}>Rate</th>
+                  <th className="text-right px-4 py-3 font-medium text-xs uppercase" style={{ color: "var(--muted-foreground)", width: "10%" }}>Total</th>
                 </tr>
               </thead>
               <tbody>
@@ -162,7 +164,13 @@ export default async function PoDetailPage({
                         background: "var(--surface)",
                       }}
                     >
-                      <td className="px-4 py-3 font-medium">{item.name}</td>
+                      <td className="px-3 py-3 text-center text-xs font-mono-nums font-semibold" style={{ color: "var(--muted-foreground)" }}>
+                        {idx + 1}
+                      </td>
+                      <td className="px-4 py-3 font-semibold font-mono-nums">{item.partNumber}</td>
+                      <td className="px-4 py-3 font-medium" style={{ color: item.name ? "var(--foreground)" : "var(--muted-foreground-soft)" }}>
+                        {item.name || "—"}
+                      </td>
                       <td className="px-4 py-3 text-right font-mono-nums">{qty.toString()}</td>
                       <td className="px-4 py-3 text-right font-mono-nums">{rate.toFixed(2)}</td>
                       <td className="px-4 py-3 text-right font-mono-nums font-semibold">{lineGross.toFixed(2)}</td>

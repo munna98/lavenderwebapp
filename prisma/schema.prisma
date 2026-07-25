@@ -96,7 +96,8 @@ model DocumentItem {
 
   document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
 
-  name       String
+  partNumber String  @default("")
+  name       String?
   qty        Decimal @db.Decimal(12, 4)
   rate       Decimal @db.Decimal(12, 4)
   taxPercent Decimal @default(0) @db.Decimal(5, 2)

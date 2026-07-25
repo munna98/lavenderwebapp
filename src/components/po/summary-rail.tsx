@@ -79,10 +79,6 @@ export default function SummaryRail({ totals, isPending, isEditing }: Props) {
           "Save as Draft"
         )}
       </button>
-
-      <p className="text-xs text-center" style={{ color: "var(--muted-foreground-soft)" }}>
-        Totals confirmed on save
-      </p>
     </div>
   );
 }
