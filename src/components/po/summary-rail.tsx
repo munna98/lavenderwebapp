@@ -1,5 +1,8 @@
 "use client";
 
+import type { UseFormRegister } from "react-hook-form";
+import type { CreateDocumentInput } from "@/lib/schemas/documents";
+
 type Totals = {
   subtotal: number;
   totalTax: number;
@@ -10,6 +13,7 @@ type Props = {
   totals: Totals;
   isPending: boolean;
   isEditing?: boolean;
+  register: UseFormRegister<CreateDocumentInput>;
 };
 
 function fmt(amount: number) {
@@ -19,7 +23,7 @@ function fmt(amount: number) {
   });
 }
 
-export default function SummaryRail({ totals, isPending, isEditing }: Props) {
+export default function SummaryRail({ totals, isPending, isEditing, register }: Props) {
   return (
     <div
       className="sticky top-20 w-full lg:w-72 shrink-0 rounded-xl border p-5 space-y-4"
@@ -79,6 +83,27 @@ export default function SummaryRail({ totals, isPending, isEditing }: Props) {
           "Save as Draft"
         )}
       </button>
+
+      {/* Customer Info Section placed under Summary */}
+      <div className="border-t pt-4 space-y-2.5" style={{ borderColor: "var(--border)" }}>
+        <label className="block text-sm font-medium" style={{ color: "var(--foreground)" }}>
+          Customer Info
+        </label>
+        <div className="space-y-2">
+          <input
+            {...register("customerName")}
+            placeholder="Customer Name"
+            className="w-full px-2.5 py-1.5 rounded-md border text-sm outline-none focus:border-accent"
+            style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
+          />
+          <input
+            {...register("customerContact")}
+            placeholder="Phone / Contact Info"
+            className="w-full px-2.5 py-1.5 rounded-md border text-sm outline-none focus:border-accent"
+            style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
+          />
+        </div>
+      </div>
     </div>
   );
 }

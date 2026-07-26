@@ -157,58 +157,28 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
             </div>
           )}
 
-          {/* Supplier & Customer Reference Row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Supplier */}
-            <div>
-              <label className="block text-sm font-medium mb-1.5">
-                Supplier <span style={{ color: "var(--brass)" }}>*</span>
-              </label>
-              <Controller
-                control={form.control}
-                name="supplierId"
-                render={({ field }) => (
-                  <SupplierCombobox
-                    suppliers={suppliers}
-                    value={field.value}
-                    onChange={field.onChange}
-                    onEnterNext={() => focusInput(0, "partNumber")}
-                  />
-                )}
-              />
-              {form.formState.errors.supplierId && (
-                <p className="mt-1 text-xs font-medium" style={{ color: "#EF4444" }}>
-                  {form.formState.errors.supplierId.message}
-                </p>
+          {/* Supplier */}
+          <div>
+            <label className="block text-sm font-medium mb-1.5">
+              Supplier <span style={{ color: "var(--brass)" }}>*</span>
+            </label>
+            <Controller
+              control={form.control}
+              name="supplierId"
+              render={({ field }) => (
+                <SupplierCombobox
+                  suppliers={suppliers}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onEnterNext={() => focusInput(0, "partNumber")}
+                />
               )}
-            </div>
-
-            {/* Customer Reference (Optional) */}
-            <div className="p-3.5 rounded-xl border space-y-3" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--muted-foreground)" }}>
-                  Customer Info <span className="normal-case font-normal text-[11px]">(Internal reference)</span>
-                </span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <div>
-                  <input
-                    {...form.register("customerName")}
-                    placeholder="Customer Name"
-                    className="w-full px-2.5 py-1.5 rounded-md border text-sm outline-none focus:border-accent"
-                    style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
-                  />
-                </div>
-                <div>
-                  <input
-                    {...form.register("customerContact")}
-                    placeholder="Phone / Contact Info"
-                    className="w-full px-2.5 py-1.5 rounded-md border text-sm outline-none focus:border-accent"
-                    style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
-                  />
-                </div>
-              </div>
-            </div>
+            />
+            {form.formState.errors.supplierId && (
+              <p className="mt-1 text-xs font-medium" style={{ color: "#EF4444" }}>
+                {form.formState.errors.supplierId.message}
+              </p>
+            )}
           </div>
 
           {/* Line items */}
@@ -264,7 +234,7 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
                           {idx + 1}
                         </td>
 
-                        {/* Part # (Auto-strips all whitespace on input) */}
+                        {/* Part # */}
                         <td className="px-3 py-2">
                           <input
                             {...partNoProps}
@@ -292,7 +262,7 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
                           )}
                         </td>
 
-                        {/* Description (Optional) */}
+                        {/* Description */}
                         <td className="px-3 py-2">
                           <input
                             {...nameProps}
@@ -301,7 +271,7 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
                               setInputRef(idx, "name", e);
                             }}
                             onKeyDown={(e) => handleNameKeyDown(e, idx)}
-                            placeholder="Description (optional)"
+                            placeholder="Description"
                             className="w-full px-2.5 py-1.5 rounded-md border text-sm outline-none transition-all focus:border-accent"
                             style={{
                               borderColor: "var(--border)",
@@ -388,7 +358,12 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
         </div>
 
         {/* ── Summary Rail ──────────────────────────────── */}
-        <SummaryRail totals={totals} isPending={isPending} isEditing={isEditing} />
+        <SummaryRail
+          totals={totals}
+          isPending={isPending}
+          isEditing={isEditing}
+          register={form.register}
+        />
       </div>
     </form>
   );
