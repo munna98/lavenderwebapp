@@ -18,7 +18,7 @@ type Totals = {
 
 type Props = {
   document: DocumentWithRelations;
-  totals: Totals;
+  totals?: Totals;
 };
 
 const styles = StyleSheet.create({

@@ -105,8 +105,8 @@ export default async function PoDetailPage({
 
       {/* Two-Column Detail Layout */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Supplier Details */}
-        <div className="space-y-6 md:col-span-1">
+        {/* Supplier & Customer Details */}
+        <div className="space-y-4 md:col-span-1">
           <div
             className="rounded-xl border p-5 space-y-3"
             style={{ background: "var(--surface)", borderColor: "var(--border)" }}
@@ -122,6 +122,19 @@ export default async function PoDetailPage({
               {supplierTaxId && <p className="text-xs font-mono-nums mt-1" style={{ color: "var(--muted-foreground)" }}>Tax ID: {supplierTaxId}</p>}
             </div>
           </div>
+
+          {(doc.customerName || doc.customerContact) && (
+            <div
+              className="rounded-xl border p-5 space-y-2"
+              style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+            >
+              <h2 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--muted-foreground)" }}>
+                Customer Reference
+              </h2>
+              {doc.customerName && <p className="font-semibold text-sm">{doc.customerName}</p>}
+              {doc.customerContact && <p className="text-xs mt-0.5" style={{ color: "var(--muted-foreground)" }}>Contact: {doc.customerContact}</p>}
+            </div>
+          )}
 
           {doc.notes && (
             <div

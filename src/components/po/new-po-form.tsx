@@ -15,6 +15,8 @@ type Props = {
     documentId: string;
     supplierId: string;
     notes?: string | null;
+    customerName?: string | null;
+    customerContact?: string | null;
     items: Array<{ partNumber: string; name?: string | null; qty: number; rate: number; taxPercent?: number }>;
   };
 };
@@ -36,6 +38,8 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
     defaultValues: {
       supplierId: initialData?.supplierId || "",
       notes: initialData?.notes || "",
+      customerName: initialData?.customerName || "",
+      customerContact: initialData?.customerContact || "",
       items: initialData?.items && initialData.items.length > 0
         ? initialData.items.map((i) => ({
             partNumber: (i.partNumber || "").replace(/\s+/g, ""),
@@ -153,28 +157,58 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
             </div>
           )}
 
-          {/* Supplier */}
-          <div>
-            <label className="block text-sm font-medium mb-1.5">
-              Supplier <span style={{ color: "var(--brass)" }}>*</span>
-            </label>
-            <Controller
-              control={form.control}
-              name="supplierId"
-              render={({ field }) => (
-                <SupplierCombobox
-                  suppliers={suppliers}
-                  value={field.value}
-                  onChange={field.onChange}
-                  onEnterNext={() => focusInput(0, "partNumber")}
-                />
+          {/* Supplier & Customer Reference Row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Supplier */}
+            <div>
+              <label className="block text-sm font-medium mb-1.5">
+                Supplier <span style={{ color: "var(--brass)" }}>*</span>
+              </label>
+              <Controller
+                control={form.control}
+                name="supplierId"
+                render={({ field }) => (
+                  <SupplierCombobox
+                    suppliers={suppliers}
+                    value={field.value}
+                    onChange={field.onChange}
+                    onEnterNext={() => focusInput(0, "partNumber")}
+                  />
+                )}
+              />
+              {form.formState.errors.supplierId && (
+                <p className="mt-1 text-xs font-medium" style={{ color: "#EF4444" }}>
+                  {form.formState.errors.supplierId.message}
+                </p>
               )}
-            />
-            {form.formState.errors.supplierId && (
-              <p className="mt-1 text-xs font-medium" style={{ color: "#EF4444" }}>
-                {form.formState.errors.supplierId.message}
-              </p>
-            )}
+            </div>
+
+            {/* Customer Reference (Optional) */}
+            <div className="p-3.5 rounded-xl border space-y-3" style={{ background: "var(--surface)", borderColor: "var(--border)" }}>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--muted-foreground)" }}>
+                  Customer Info <span className="normal-case font-normal text-[11px]">(Internal reference)</span>
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <input
+                    {...form.register("customerName")}
+                    placeholder="Customer Name"
+                    className="w-full px-2.5 py-1.5 rounded-md border text-sm outline-none focus:border-accent"
+                    style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
+                  />
+                </div>
+                <div>
+                  <input
+                    {...form.register("customerContact")}
+                    placeholder="Phone / Contact Info"
+                    className="w-full px-2.5 py-1.5 rounded-md border text-sm outline-none focus:border-accent"
+                    style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Line items */}

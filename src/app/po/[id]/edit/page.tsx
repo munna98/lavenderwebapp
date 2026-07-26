@@ -50,6 +50,8 @@ export default async function EditPoPage({
     documentId: doc.id,
     supplierId: doc.supplierId,
     notes: doc.notes,
+    customerName: doc.customerName,
+    customerContact: doc.customerContact,
     items: doc.items.map((i) => ({
       partNumber: i.partNumber,
       name: i.name || "",

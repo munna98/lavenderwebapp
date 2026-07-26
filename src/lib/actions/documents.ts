@@ -39,7 +39,7 @@ export async function createDocument(
     };
   }
 
-  const { supplierId, notes, items } = parsed.data;
+  const { supplierId, notes, customerName, customerContact, items } = parsed.data;
 
   const supplier = await prisma.supplier.findUnique({ where: { id: supplierId } });
   if (!supplier) {
@@ -60,6 +60,8 @@ export async function createDocument(
           supplierId,
           createdById: auth.user.id,
           notes: notes || null,
+          customerName: customerName || null,
+          customerContact: customerContact || null,
           items: {
             create: items.map((item) => ({
               partNumber: item.partNumber,
@@ -113,7 +115,7 @@ export async function updateDocument(
     };
   }
 
-  const { supplierId, notes, items } = parsed.data;
+  const { supplierId, notes, customerName, customerContact, items } = parsed.data;
 
   const supplier = await prisma.supplier.findUnique({ where: { id: supplierId } });
   if (!supplier) {
@@ -131,6 +133,8 @@ export async function updateDocument(
         data: {
           supplierId,
           notes: notes || null,
+          customerName: customerName || null,
+          customerContact: customerContact || null,
           items: {
             create: items.map((item) => ({
               partNumber: item.partNumber,

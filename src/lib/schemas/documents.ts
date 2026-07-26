@@ -14,6 +14,8 @@ export const LineItemSchema = z.object({
 export const CreateDocumentSchema = z.object({
   supplierId: z.string().min(1, "Please select a supplier"),
   notes: z.string().optional(),
+  customerName: z.string().optional(),
+  customerContact: z.string().optional(),
   items: z.array(LineItemSchema).min(1, "At least one line item is required"),
 });
 

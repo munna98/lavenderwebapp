@@ -73,6 +73,10 @@ model Document {
 
   notes String?
 
+  // Customer reference info for future tracking
+  customerName    String?
+  customerContact String?
+
   // Supplier snapshot — populated at send time to preserve historical accuracy
   // even if the supplier's details change later
   snapshotSupplierName    String?
