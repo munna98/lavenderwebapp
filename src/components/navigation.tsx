@@ -37,7 +37,7 @@ export default function Navigation({ user }: Props) {
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
         {/* Brand */}
         <div className="flex items-center gap-6">
-          <Link href="/po" className="flex items-center gap-2.5">
+          <Link href="/po" prefetch={true} className="flex items-center gap-2.5">
             <div
               className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs"
               style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
@@ -57,6 +57,7 @@ export default function Navigation({ user }: Props) {
                 <Link
                   key={link.href}
                   href={link.href}
+                  prefetch={true}
                   className="px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
                   style={{
                     color: active ? "var(--accent)" : "var(--muted-foreground)",
