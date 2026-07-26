@@ -4,9 +4,9 @@ import { useTransition, useState } from "react";
 import { sendDocument, cancelDocument } from "@/lib/actions/documents";
 import Link from "next/link";
 
-// ── TEMPORARY DEMO TOGGLE ────────────────────────────────────
-// Set to false to instantly restore full Send Email & PDF Download functionality
-const DEMO_MODE = true;
+// ── DEMO TOGGLES ─────────────────────────────────────────────
+// Send via Email disabled for demo preview
+const DEMO_MODE_SEND = true;
 
 type Props = {
   documentId: string;
@@ -21,7 +21,7 @@ export default function PoActions({ documentId, status, supplierEmail, canCancel
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   function handleSend() {
-    if (DEMO_MODE) return;
+    if (DEMO_MODE_SEND) return;
     if (!supplierEmail) {
       setFeedback({ type: "error", message: "Supplier email address is missing." });
       return;
@@ -88,50 +88,33 @@ export default function PoActions({ documentId, status, supplierEmail, canCancel
           </Link>
         )}
 
-        {/* Download PDF button (Disabled in DEMO_MODE) */}
-        {DEMO_MODE ? (
-          <button
-            type="button"
-            disabled={true}
-            title="PDF Download is disabled for preview demo"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold border opacity-50 cursor-not-allowed"
-            style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--muted-foreground)" }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
-            <span>Download PDF</span>
-          </button>
-        ) : (
-          <a
-            href={`/api/po/${documentId}/pdf`}
-            download
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer border hover:bg-surface-raised transition-colors"
-            style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
-            <span>Download PDF</span>
-          </a>
-        )}
+        {/* Download PDF button (Fully Enabled) */}
+        <a
+          href={`/api/po/${documentId}/pdf`}
+          download
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer border hover:bg-surface-raised transition-colors"
+          style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          <span>Download PDF</span>
+        </a>
 
         {status === "DRAFT" && (
           <button
             id="send-po-btn"
             onClick={handleSend}
-            disabled={DEMO_MODE || isPending || !supplierEmail}
-            title={DEMO_MODE ? "Send Email is disabled for preview demo" : undefined}
+            disabled={DEMO_MODE_SEND || isPending || !supplierEmail}
+            title={DEMO_MODE_SEND ? "Send Email is disabled for preview demo" : undefined}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors border-0"
             style={{
-              background: DEMO_MODE ? "var(--muted-foreground-soft)" : "var(--accent)",
+              background: DEMO_MODE_SEND ? "var(--muted-foreground-soft)" : "var(--accent)",
               color: "#fff",
-              cursor: DEMO_MODE ? "not-allowed" : "pointer",
-              opacity: DEMO_MODE ? 0.6 : 1,
+              cursor: DEMO_MODE_SEND ? "not-allowed" : "pointer",
+              opacity: DEMO_MODE_SEND ? 0.6 : 1,
             }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -153,7 +136,7 @@ export default function PoActions({ documentId, status, supplierEmail, canCancel
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10" />
               <line x1="9" y1="9" x2="15" y2="15" />
-              <line x1="15" y1="9" x2="9" y2="15" />
+              <line x1="15" y1="9" x2="15" y2="15" />
             </svg>
             <span>{isPending ? "Cancelling..." : "Cancel"}</span>
           </button>

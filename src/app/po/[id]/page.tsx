@@ -112,7 +112,7 @@ export default async function PoDetailPage({
             style={{ background: "var(--surface)", borderColor: "var(--border)" }}
           >
             <h2 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--muted-foreground)" }}>
-              Supplier / Vendor
+              Supplier
             </h2>
             <div>
               <p className="font-semibold text-base">{supplierName}</p>

@@ -1,5 +1,6 @@
-import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import { Document, Page, Text, View, Image, StyleSheet } from "@react-pdf/renderer";
 import type { Document as PrismaDocument, Supplier, User, DocumentItem } from "@prisma/client";
+import path from "path";
 
 type DocumentWithRelations = PrismaDocument & {
   supplier: Supplier;
@@ -29,42 +30,37 @@ const styles = StyleSheet.create({
     color: "#1A1917",
     backgroundColor: "#FFFFFF",
   },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
+  headerBannerContainer: {
+    width: "100%",
+    marginBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: "#E4E2DC",
-    borderBottomStyle: "solid",
-    paddingBottom: 16,
-    marginBottom: 20,
+    paddingBottom: 8,
   },
-  companyName: {
-    fontSize: 16,
+  headerBannerImage: {
+    width: "100%",
+    height: 65,
+    objectFit: "contain",
+  },
+  titleContainer: {
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+    marginVertical: 10,
+  },
+  centerTitle: {
+    fontSize: 15,
     fontWeight: "bold",
+    textAlign: "center",
+    textTransform: "uppercase",
+    letterSpacing: 2,
     color: "#1F5C4E",
-    marginBottom: 4,
-  },
-  companySub: {
-    fontSize: 8,
-    color: "#70766F",
-  },
-  docTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    textAlign: "right",
-    color: "#1F5C4E",
-  },
-  docMeta: {
-    fontSize: 9,
-    color: "#70766F",
-    textAlign: "right",
-    marginTop: 4,
   },
   addressGrid: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 24,
+    marginBottom: 20,
+    marginTop: 6,
   },
   addressCol: {
     width: "48%",
@@ -144,35 +140,37 @@ export default function PurchaseOrderPdf({ document: doc }: Props) {
     year: "numeric",
   });
 
+  const bannerPath = path.join(process.cwd(), "public", "images", "header-banner.png");
+
   return (
     <Document title={`PO_${doc.number}`}>
       <Page size="A4" style={styles.page}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.companyName}>Lavender Auto Parts</Text>
-            <Text style={styles.companySub}>orders@lavenderautoparts.com</Text>
-          </View>
-          <View>
-            <Text style={styles.docTitle}>PURCHASE ORDER</Text>
-            <Text style={styles.docMeta}>PO Number: {doc.number}</Text>
-            <Text style={styles.docMeta}>Date: {dateStr}</Text>
-          </View>
+        {/* Official Company Header Banner */}
+        <View style={styles.headerBannerContainer}>
+          <Image src={bannerPath} style={styles.headerBannerImage} />
+        </View>
+
+        {/* Centered Document Title */}
+        <View style={styles.titleContainer}>
+          <Text style={styles.centerTitle}>PURCHASE ORDER</Text>
         </View>
 
         {/* Vendor & Delivery info */}
         <View style={styles.addressGrid}>
           <View style={styles.addressCol}>
-            <Text style={styles.sectionLabel}>Vendor / Supplier</Text>
+            <Text style={styles.sectionLabel}>Supplier</Text>
             <Text style={styles.partyName}>{supplierName}</Text>
             {supplierAddress && <Text style={styles.addressText}>{supplierAddress}</Text>}
             {supplierPhone && <Text style={styles.addressText}>Phone: {supplierPhone}</Text>}
             {supplierEmail && <Text style={styles.addressText}>Email: {supplierEmail}</Text>}
             {supplierTaxId && <Text style={styles.addressText}>Tax ID: {supplierTaxId}</Text>}
           </View>
+
           <View style={styles.addressCol}>
-            <Text style={styles.sectionLabel}>Issued By</Text>
-            <Text style={styles.partyName}>Lavender Auto Parts</Text>
+            <Text style={styles.sectionLabel}>PO Details</Text>
+            <Text style={styles.partyName}>{doc.number}</Text>
+            <Text style={styles.addressText}>Date: {dateStr}</Text>
+            <Text style={styles.addressText}>Issued By: Lavender Auto Parts</Text>
             <Text style={styles.addressText}>Prepared by: {doc.createdBy.name}</Text>
             <Text style={styles.addressText}>Email: {doc.createdBy.email}</Text>
           </View>
