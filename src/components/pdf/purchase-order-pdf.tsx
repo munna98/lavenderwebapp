@@ -24,43 +24,46 @@ type Props = {
 
 const styles = StyleSheet.create({
   page: {
-    padding: 36,
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 65,
     fontFamily: "Helvetica",
     fontSize: 9,
-    color: "#1A1917",
+    color: "#000000",
     backgroundColor: "#FFFFFF",
   },
   headerBannerContainer: {
     width: "100%",
-    marginBottom: 12,
+    marginBottom: 4,
     borderBottomWidth: 1,
     borderBottomColor: "#E4E2DC",
-    paddingBottom: 8,
+    paddingBottom: 4,
   },
   headerBannerImage: {
     width: "100%",
-    height: 65,
+    height: 80,
     objectFit: "contain",
   },
   titleContainer: {
     width: "100%",
     alignItems: "center",
     justifyContent: "center",
-    marginVertical: 10,
+    marginTop: 2,
+    marginBottom: 6,
   },
   centerTitle: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: "bold",
     textAlign: "center",
     textTransform: "uppercase",
     letterSpacing: 2,
-    color: "#1F5C4E",
+    color: "#000000",
   },
   addressGrid: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 20,
-    marginTop: 6,
+    marginBottom: 12,
+    marginTop: 2,
   },
   addressCol: {
     width: "48%",
@@ -68,38 +71,41 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 8,
     fontWeight: "bold",
-    color: "#70766F",
+    color: "#000000",
     textTransform: "uppercase",
-    marginBottom: 6,
+    marginBottom: 3,
   },
   partyName: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: "bold",
-    marginBottom: 4,
+    marginBottom: 2,
+    color: "#000000",
   },
   addressText: {
-    color: "#4A4D4A",
-    lineHeight: 1.4,
+    color: "#222222",
+    fontSize: 8.5,
+    lineHeight: 1.25,
+    marginBottom: 1,
   },
   table: {
     width: "100%",
-    marginBottom: 20,
+    marginBottom: 16,
   },
   tableHeader: {
     flexDirection: "row",
     backgroundColor: "#F5F4F0",
     borderBottomWidth: 1,
     borderBottomColor: "#E4E2DC",
-    paddingVertical: 6,
-    paddingHorizontal: 8,
+    paddingVertical: 5,
+    paddingHorizontal: 6,
     fontWeight: "bold",
   },
   tableRow: {
     flexDirection: "row",
     borderBottomWidth: 1,
     borderBottomColor: "#E4E2DC",
-    paddingVertical: 8,
-    paddingHorizontal: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 6,
   },
   colSlNo: { width: "6%", textAlign: "center" },
   colPartNo: { width: "30%" },
@@ -110,20 +116,21 @@ const styles = StyleSheet.create({
   notesSection: {
     borderTopWidth: 1,
     borderTopColor: "#E4E2DC",
-    paddingTop: 12,
-    marginTop: 12,
-  },
-  footer: {
-    position: "absolute",
-    bottom: 24,
-    left: 36,
-    right: 36,
-    textAlign: "center",
-    fontSize: 8,
-    color: "#9BA09A",
-    borderTopWidth: 1,
-    borderTopColor: "#E4E2DC",
     paddingTop: 8,
+    marginTop: 8,
+  },
+  footerBannerContainer: {
+    position: "absolute",
+    bottom: 16,
+    left: 24,
+    right: 24,
+    width: "100%",
+    alignItems: "center",
+  },
+  footerBannerImage: {
+    width: "100%",
+    height: 42,
+    objectFit: "contain",
   },
 });
 
@@ -140,14 +147,15 @@ export default function PurchaseOrderPdf({ document: doc }: Props) {
     year: "numeric",
   });
 
-  const bannerPath = path.join(process.cwd(), "public", "images", "header-banner.png");
+  const headerBannerPath = path.join(process.cwd(), "public", "images", "header-banner.png");
+  const footerBannerPath = path.join(process.cwd(), "public", "images", "footer-banner.png");
 
   return (
     <Document title={`PO_${doc.number}`}>
       <Page size="A4" style={styles.page}>
-        {/* Official Company Header Banner */}
+        {/* Official Header Banner */}
         <View style={styles.headerBannerContainer}>
-          <Image src={bannerPath} style={styles.headerBannerImage} />
+          <Image src={headerBannerPath} style={styles.headerBannerImage} />
         </View>
 
         {/* Centered Document Title */}
@@ -155,7 +163,7 @@ export default function PurchaseOrderPdf({ document: doc }: Props) {
           <Text style={styles.centerTitle}>PURCHASE ORDER</Text>
         </View>
 
-        {/* Vendor & Delivery info */}
+        {/* Supplier & PO Details */}
         <View style={styles.addressGrid}>
           <View style={styles.addressCol}>
             <Text style={styles.sectionLabel}>Supplier</Text>
@@ -210,10 +218,10 @@ export default function PurchaseOrderPdf({ document: doc }: Props) {
           </View>
         )}
 
-        {/* Footer */}
-        <Text style={styles.footer}>
-          Thank you for your business. For inquiries regarding this purchase order, please contact {doc.createdBy.email}.
-        </Text>
+        {/* Official Footer Banner */}
+        <View style={styles.footerBannerContainer}>
+          <Image src={footerBannerPath} style={styles.footerBannerImage} />
+        </View>
       </Page>
     </Document>
   );
