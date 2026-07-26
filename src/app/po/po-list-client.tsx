@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { DocumentStatus } from "@prisma/client";
 
 type PoItem = {
@@ -25,6 +26,7 @@ export default function PoListClient({ pos, suppliers }: Props) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [supplierFilter, setSupplierFilter] = useState<string>("ALL");
+  const router = useRouter();
 
   const filtered = pos.filter((item) => {
     const matchesSearch =
@@ -119,6 +121,9 @@ export default function PoListClient({ pos, suppliers }: Props) {
               filtered.map((item, idx) => (
                 <tr
                   key={item.id}
+                  onClick={() => router.push(`/po/${item.id}`)}
+                  onMouseEnter={() => router.prefetch(`/po/${item.id}`)}
+                  className="cursor-pointer transition-colors hover:bg-surface-raised"
                   style={{
                     borderTop: idx > 0 ? "1px solid var(--border)" : undefined,
                     background: "var(--surface)",
@@ -127,8 +132,10 @@ export default function PoListClient({ pos, suppliers }: Props) {
                   <td className="px-4 py-3">
                     <Link
                       href={`/po/${item.id}`}
+                      prefetch={true}
                       className="font-semibold hover:underline"
                       style={{ color: "var(--accent)" }}
+                      onClick={(e) => e.stopPropagation()}
                     >
                       {item.number}
                     </Link>

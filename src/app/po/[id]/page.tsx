@@ -22,17 +22,20 @@ export default async function PoDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const auth = await requireAuth();
   const { id } = await params;
 
-  const doc = await prisma.document.findUnique({
-    where: { id },
-    include: {
-      supplier: true,
-      createdBy: true,
-      items: true,
-    },
-  });
+  // Run auth check and DB query concurrently in parallel to eliminate query waterfalls
+  const [auth, doc] = await Promise.all([
+    requireAuth(),
+    prisma.document.findUnique({
+      where: { id },
+      include: {
+        supplier: true,
+        createdBy: true,
+        items: true,
+      },
+    }),
+  ]);
 
   if (!doc) notFound();
 
