@@ -24,9 +24,9 @@ type Props = {
 
 const styles = StyleSheet.create({
   page: {
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 65,
+    paddingHorizontal: 20,
+    paddingTop: 18,
+    paddingBottom: 70,
     fontFamily: "Helvetica",
     fontSize: 9,
     color: "#000000",
@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
   },
   headerBannerImage: {
     width: "100%",
-    height: 80,
+    height: 82,
     objectFit: "contain",
   },
   titleContainer: {
@@ -121,15 +121,14 @@ const styles = StyleSheet.create({
   },
   footerBannerContainer: {
     position: "absolute",
-    bottom: 16,
-    left: 24,
-    right: 24,
-    width: "100%",
+    bottom: 12,
+    left: 8,
+    right: 8,
     alignItems: "center",
   },
   footerBannerImage: {
     width: "100%",
-    height: 42,
+    height: 52,
     objectFit: "contain",
   },
 });
@@ -218,7 +217,7 @@ export default function PurchaseOrderPdf({ document: doc }: Props) {
           </View>
         )}
 
-        {/* Official Footer Banner */}
+        {/* Official Footer Banner (Wider layout) */}
         <View style={styles.footerBannerContainer}>
           <Image src={footerBannerPath} style={styles.footerBannerImage} />
         </View>
