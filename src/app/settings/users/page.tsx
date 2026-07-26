@@ -1,7 +1,6 @@
 import { requireAdmin } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { redirect } from "next/navigation";
 import type { Metadata } from "next";
-import UsersTable from "./users-table";
 
 export const metadata: Metadata = {
   title: "User Management — Lavender Auto Parts",
@@ -10,6 +9,10 @@ export const metadata: Metadata = {
 export default async function UsersPage() {
   await requireAdmin();
 
+  // TEMPORARY DEMO MODE: Redirect to Coming Soon
+  redirect("/coming-soon");
+
+  /* TO RESTORE USERS PAGE: Remove redirect above and uncomment below:
   const users = await prisma.user.findMany({
     orderBy: [{ role: "asc" }, { createdAt: "asc" }],
   });
@@ -28,4 +31,5 @@ export default async function UsersPage() {
       <UsersTable users={users} />
     </div>
   );
+  */
 }

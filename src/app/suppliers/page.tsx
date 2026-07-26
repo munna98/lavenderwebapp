@@ -1,16 +1,18 @@
 import { requireAuth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { redirect } from "next/navigation";
 import type { Metadata } from "next";
-import Link from "next/link";
-import SuppliersClient from "./suppliers-client";
 
 export const metadata: Metadata = {
   title: "Suppliers — Lavender Auto Parts",
 };
 
 export default async function SuppliersPage() {
-  const auth = await requireAuth();
+  await requireAuth();
 
+  // TEMPORARY DEMO MODE: Redirect to Coming Soon
+  redirect("/coming-soon");
+
+  /* TO RESTORE SUPPLIERS PAGE: Remove redirect above and uncomment below:
   const suppliers = await prisma.supplier.findMany({
     orderBy: { name: "asc" },
     include: { _count: { select: { documents: true } } },
@@ -70,4 +72,5 @@ export default async function SuppliersPage() {
       )}
     </div>
   );
+  */
 }
