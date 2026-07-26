@@ -43,6 +43,8 @@ export default async function PoListPage() {
       sentAt: doc.sentAt,
       supplier: doc.supplier,
       createdBy: doc.createdBy,
+      customerName: doc.customerName,
+      customerContact: doc.customerContact,
       itemsCount: doc.items.length,
       totalFormatted: totals.totalFormatted,
     };

@@ -57,6 +57,28 @@ export default function SummaryRail({ totals, isPending, isEditing, register }: 
         </div>
       </div>
 
+      {/* Customer Info Section */}
+      <div className="border-t pt-4 space-y-2.5" style={{ borderColor: "var(--border)" }}>
+        <label className="block text-sm font-medium" style={{ color: "var(--foreground)" }}>
+          Customer Info
+        </label>
+        <div className="space-y-2">
+          <input
+            {...register("customerName")}
+            placeholder="Customer Name"
+            className="w-full px-2.5 py-1.5 rounded-md border text-sm outline-none focus:border-accent"
+            style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
+          />
+          <input
+            {...register("customerContact")}
+            placeholder="Phone / Contact Info"
+            className="w-full px-2.5 py-1.5 rounded-md border text-sm outline-none focus:border-accent"
+            style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
+          />
+        </div>
+      </div>
+
+      {/* Save Draft / Save Changes Button at the bottom */}
       <button
         type="submit"
         id="save-draft-btn"
@@ -83,27 +105,6 @@ export default function SummaryRail({ totals, isPending, isEditing, register }: 
           "Save as Draft"
         )}
       </button>
-
-      {/* Customer Info Section placed under Summary */}
-      <div className="border-t pt-4 space-y-2.5" style={{ borderColor: "var(--border)" }}>
-        <label className="block text-sm font-medium" style={{ color: "var(--foreground)" }}>
-          Customer Info
-        </label>
-        <div className="space-y-2">
-          <input
-            {...register("customerName")}
-            placeholder="Customer Name"
-            className="w-full px-2.5 py-1.5 rounded-md border text-sm outline-none focus:border-accent"
-            style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
-          />
-          <input
-            {...register("customerContact")}
-            placeholder="Phone / Contact Info"
-            className="w-full px-2.5 py-1.5 rounded-md border text-sm outline-none focus:border-accent"
-            style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
-          />
-        </div>
-      </div>
     </div>
   );
 }

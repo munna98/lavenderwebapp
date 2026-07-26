@@ -13,6 +13,8 @@ type PoItem = {
   sentAt: Date | null;
   supplier: { id: string; name: string };
   createdBy: { id: string; name: string };
+  customerName?: string | null;
+  customerContact?: string | null;
   itemsCount: number;
   totalFormatted: string;
 };
@@ -29,10 +31,13 @@ export default function PoListClient({ pos, suppliers }: Props) {
   const router = useRouter();
 
   const filtered = pos.filter((item) => {
+    const q = search.toLowerCase();
     const matchesSearch =
-      item.number.toLowerCase().includes(search.toLowerCase()) ||
-      item.supplier.name.toLowerCase().includes(search.toLowerCase()) ||
-      item.createdBy.name.toLowerCase().includes(search.toLowerCase());
+      item.number.toLowerCase().includes(q) ||
+      item.supplier.name.toLowerCase().includes(q) ||
+      item.createdBy.name.toLowerCase().includes(q) ||
+      (item.customerName && item.customerName.toLowerCase().includes(q)) ||
+      (item.customerContact && item.customerContact.toLowerCase().includes(q));
 
     const matchesStatus = statusFilter === "ALL" || item.status === statusFilter;
     const matchesSupplier = supplierFilter === "ALL" || item.supplier.id === supplierFilter;
@@ -55,7 +60,7 @@ export default function PoListClient({ pos, suppliers }: Props) {
           <input
             id="po-list-search"
             type="search"
-            placeholder="Search PO #, supplier, or creator..."
+            placeholder="Search PO #, supplier, customer, or creator..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full px-3 py-2 rounded-lg border text-sm outline-none"
@@ -140,7 +145,16 @@ export default function PoListClient({ pos, suppliers }: Props) {
                       {item.number}
                     </Link>
                   </td>
-                  <td className="px-4 py-3 font-medium">{item.supplier.name}</td>
+                  <td className="px-4 py-3 font-medium">
+                    <div>
+                      <p>{item.supplier.name}</p>
+                      {item.customerName && (
+                        <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>
+                          Ref: {item.customerName}
+                        </p>
+                      )}
+                    </div>
+                  </td>
                   <td className="px-4 py-3 hidden md:table-cell" style={{ color: "var(--muted-foreground)" }}>
                     {item.createdBy.name}
                   </td>
