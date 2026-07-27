@@ -14,6 +14,7 @@ type Props = {
   initialData?: {
     documentId: string;
     supplierId: string;
+    supplierEmail?: string | null;
     notes?: string | null;
     customerName?: string | null;
     customerContact?: string | null;
@@ -22,6 +23,9 @@ type Props = {
 };
 
 const DEFAULT_ITEM = { partNumber: "", name: "", qty: 1, rate: 0, taxPercent: 0 };
+
+const DEFAULT_NOTES = `Kindly notify us in advance if any part is unavailable or if there are any price changes or discrepancies before supplying the order.
+Please notify us immediately of any stock unavailability, price changes, or discrepancies before processing and dispatching this order.`;
 
 export default function NewPoForm({ suppliers, initialData }: Props) {
   const [isPending, startTransition] = useTransition();
@@ -37,7 +41,8 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
     resolver: zodResolver(CreateDocumentSchema),
     defaultValues: {
       supplierId: initialData?.supplierId || "",
-      notes: initialData?.notes || "",
+      supplierEmail: initialData?.supplierEmail || "",
+      notes: initialData?.notes !== undefined && initialData?.notes !== null ? initialData.notes : DEFAULT_NOTES,
       customerName: initialData?.customerName || "",
       customerContact: initialData?.customerContact || "",
       items: initialData?.items && initialData.items.length > 0
@@ -157,28 +162,49 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
             </div>
           )}
 
-          {/* Supplier */}
-          <div>
-            <label className="block text-sm font-medium mb-1.5">
-              Supplier <span style={{ color: "var(--brass)" }}>*</span>
-            </label>
-            <Controller
-              control={form.control}
-              name="supplierId"
-              render={({ field }) => (
-                <SupplierCombobox
-                  suppliers={suppliers}
-                  value={field.value}
-                  onChange={field.onChange}
-                  onEnterNext={() => focusInput(0, "partNumber")}
-                />
+          {/* Supplier & Optional Supplier Email Override */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1.5">
+                Supplier <span style={{ color: "var(--brass)" }}>*</span>
+              </label>
+              <Controller
+                control={form.control}
+                name="supplierId"
+                render={({ field }) => (
+                  <SupplierCombobox
+                    suppliers={suppliers}
+                    value={field.value}
+                    onChange={(selectedId) => {
+                      field.onChange(selectedId);
+                      const selectedSup = suppliers.find((s) => s.id === selectedId);
+                      if (selectedSup?.email) {
+                        form.setValue("supplierEmail", selectedSup.email);
+                      }
+                    }}
+                    onEnterNext={() => focusInput(0, "partNumber")}
+                  />
+                )}
+              />
+              {form.formState.errors.supplierId && (
+                <p className="mt-1 text-xs font-medium" style={{ color: "#EF4444" }}>
+                  {form.formState.errors.supplierId.message}
+                </p>
               )}
-            />
-            {form.formState.errors.supplierId && (
-              <p className="mt-1 text-xs font-medium" style={{ color: "#EF4444" }}>
-                {form.formState.errors.supplierId.message}
-              </p>
-            )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1.5">
+                Supplier Email <span className="text-xs font-normal" style={{ color: "var(--muted-foreground)" }}>(for this PO)</span>
+              </label>
+              <input
+                {...form.register("supplierEmail")}
+                type="email"
+                placeholder="Order recipient email address"
+                className="w-full px-3 py-2 rounded-lg border text-sm outline-none focus:border-accent"
+                style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
+              />
+            </div>
           </div>
 
           {/* Line items */}
@@ -350,7 +376,7 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
               id="po-notes"
               {...form.register("notes")}
               placeholder="Payment terms, delivery instructions, etc."
-              rows={3}
+              rows={4}
               className="w-full px-3 py-2.5 rounded-lg border text-sm outline-none resize-none"
               style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
             />

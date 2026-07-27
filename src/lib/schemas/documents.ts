@@ -13,6 +13,7 @@ export const LineItemSchema = z.object({
 
 export const CreateDocumentSchema = z.object({
   supplierId: z.string().min(1, "Please select a supplier"),
+  supplierEmail: z.string().optional(),
   notes: z.string().optional(),
   customerName: z.string().optional(),
   customerContact: z.string().optional(),

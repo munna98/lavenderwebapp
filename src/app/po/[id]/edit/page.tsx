@@ -27,6 +27,7 @@ export default async function EditPoPage({
   const doc = await prisma.document.findUnique({
     where: { id },
     include: {
+      supplier: true,
       items: true,
     },
   });
@@ -49,6 +50,7 @@ export default async function EditPoPage({
   const initialData = {
     documentId: doc.id,
     supplierId: doc.supplierId,
+    supplierEmail: doc.supplierEmail || doc.snapshotSupplierEmail || doc.supplier.email,
     notes: doc.notes,
     customerName: doc.customerName,
     customerContact: doc.customerContact,

@@ -137,7 +137,7 @@ export default function PurchaseOrderPdf({ document: doc }: Props) {
   const supplierName = doc.snapshotSupplierName || doc.supplier.name;
   const supplierAddress = doc.snapshotSupplierAddress || doc.supplier.address;
   const supplierPhone = doc.snapshotSupplierPhone || doc.supplier.phone;
-  const supplierEmail = doc.snapshotSupplierEmail || doc.supplier.email;
+  const supplierEmail = doc.supplierEmail || doc.snapshotSupplierEmail || doc.supplier.email;
   const supplierTaxId = doc.snapshotSupplierTaxId || doc.supplier.taxId;
 
   const dateStr = (doc.sentAt || doc.createdAt).toLocaleDateString("en-GB", {
@@ -217,7 +217,7 @@ export default function PurchaseOrderPdf({ document: doc }: Props) {
           </View>
         )}
 
-        {/* Official Footer Banner (Wider layout) */}
+        {/* Official Footer Banner */}
         <View style={styles.footerBannerContainer}>
           <Image src={footerBannerPath} style={styles.footerBannerImage} />
         </View>

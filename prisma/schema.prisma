@@ -66,10 +66,11 @@ model Document {
   status DocumentStatus @default(DRAFT)
 
   // Live relations
-  supplierId  String
-  supplier    Supplier @relation(fields: [supplierId], references: [id])
-  createdById String
-  createdBy   User     @relation(fields: [createdById], references: [id])
+  supplierId    String
+  supplier      Supplier @relation(fields: [supplierId], references: [id])
+  supplierEmail String? // Custom email for this specific PO (overrides master supplier email)
+  createdById   String
+  createdBy     User     @relation(fields: [createdById], references: [id])
 
   notes String?
 

@@ -42,7 +42,7 @@ export default async function PoDetailPage({
   const supplierName = doc.snapshotSupplierName || doc.supplier.name;
   const supplierAddress = doc.snapshotSupplierAddress || doc.supplier.address;
   const supplierPhone = doc.snapshotSupplierPhone || doc.supplier.phone;
-  const supplierEmail = doc.snapshotSupplierEmail || doc.supplier.email;
+  const supplierEmail = doc.supplierEmail || doc.snapshotSupplierEmail || doc.supplier.email;
   const supplierTaxId = doc.snapshotSupplierTaxId || doc.supplier.taxId;
 
   const totals = computeTotals(

@@ -39,7 +39,7 @@ export async function createDocument(
     };
   }
 
-  const { supplierId, notes, customerName, customerContact, items } = parsed.data;
+  const { supplierId, supplierEmail, notes, customerName, customerContact, items } = parsed.data;
 
   const supplier = await prisma.supplier.findUnique({ where: { id: supplierId } });
   if (!supplier) {
@@ -58,6 +58,7 @@ export async function createDocument(
           type: "PO",
           status: "DRAFT",
           supplierId,
+          supplierEmail: supplierEmail || supplier.email || null,
           createdById: auth.user.id,
           notes: notes || null,
           customerName: customerName || null,
@@ -115,7 +116,7 @@ export async function updateDocument(
     };
   }
 
-  const { supplierId, notes, customerName, customerContact, items } = parsed.data;
+  const { supplierId, supplierEmail, notes, customerName, customerContact, items } = parsed.data;
 
   const supplier = await prisma.supplier.findUnique({ where: { id: supplierId } });
   if (!supplier) {
@@ -132,6 +133,7 @@ export async function updateDocument(
         where: { id: documentId },
         data: {
           supplierId,
+          supplierEmail: supplierEmail || supplier.email || null,
           notes: notes || null,
           customerName: customerName || null,
           customerContact: customerContact || null,
@@ -200,8 +202,10 @@ export async function sendDocument(documentId: string): Promise<ActionResult> {
   if (document.status !== "DRAFT") {
     return { success: false, error: "Only DRAFT documents can be sent." };
   }
-  if (!document.supplier.email) {
-    return { success: false, error: "Supplier has no email address on file." };
+
+  const targetEmail = document.supplierEmail || document.supplier.email;
+  if (!targetEmail) {
+    return { success: false, error: "Supplier has no email address specified for this order." };
   }
 
   try {
@@ -227,7 +231,7 @@ export async function sendDocument(documentId: string): Promise<ActionResult> {
     const { error: emailError } = await resend.emails.send({
       from: process.env.RESEND_FROM_EMAIL ?? "orders@lavenderautoparts.com",
       replyTo: document.createdBy.email,
-      to: [document.supplier.email],
+      to: [targetEmail],
       subject: `Purchase Order ${document.number} — Lavender Auto Parts`,
       text: `Dear ${document.supplier.name},\n\nPlease find attached Purchase Order ${document.number} from Lavender Auto Parts.\n\nTotal: ${totals.totalFormatted}\n\nKind regards,\n${document.createdBy.name}\nLavender Auto Parts`,
       attachments: [
@@ -250,7 +254,7 @@ export async function sendDocument(documentId: string): Promise<ActionResult> {
         sentAt: new Date(),
         snapshotSupplierName: document.supplier.name,
         snapshotSupplierAddress: document.supplier.address,
-        snapshotSupplierEmail: document.supplier.email,
+        snapshotSupplierEmail: targetEmail,
         snapshotSupplierPhone: document.supplier.phone,
         snapshotSupplierTaxId: document.supplier.taxId,
       },

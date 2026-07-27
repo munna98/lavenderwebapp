@@ -14,7 +14,7 @@ const fields = [
   { name: "address", label: "Address", type: "textarea", required: false, placeholder: "Street, City, State, ZIP" },
   { name: "phone", label: "Phone", type: "tel", required: false, placeholder: "+1 (555) 000-0000" },
   { name: "email", label: "Email", type: "email", required: false, placeholder: "accounts@supplier.com" },
-  { name: "taxId", label: "Tax ID / GST", type: "text", required: false, placeholder: "e.g. 12-3456789" },
+  { name: "taxId", label: "Tax ID", type: "text", required: false, placeholder: "e.g. 12-3456789" },
 ] as const;
 
 export default function SupplierForm({ supplier, action, submitLabel = "Save supplier" }: Props) {
