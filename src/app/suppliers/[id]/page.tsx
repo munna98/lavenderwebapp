@@ -54,7 +54,7 @@ export default async function SupplierDetailPage({
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
       {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-6" style={{ borderColor: "var(--border)" }}>
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{supplier.name}</h1>
           <p className="text-sm mt-0.5" style={{ color: "var(--muted-foreground)" }}>
