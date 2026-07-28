@@ -56,13 +56,6 @@ export default async function SupplierDetailPage({
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-6" style={{ borderColor: "var(--border)" }}>
         <div>
-          <Link
-            href="/suppliers"
-            className="text-xs font-medium hover:underline inline-flex items-center gap-1 mb-2"
-            style={{ color: "var(--muted-foreground)" }}
-          >
-            ← Back to Suppliers
-          </Link>
           <h1 className="text-2xl font-bold tracking-tight">{supplier.name}</h1>
           <p className="text-sm mt-0.5" style={{ color: "var(--muted-foreground)" }}>
             Added on {supplier.createdAt.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
@@ -85,6 +78,17 @@ export default async function SupplierDetailPage({
             style={{ background: "var(--accent)", color: "#fff" }}
           >
             + Create PO
+          </Link>
+          <Link
+            href="/suppliers"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm border font-medium cursor-pointer transition-colors"
+            style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="19" y1="12" x2="5" y2="12" />
+              <polyline points="12 19 5 12 12 5" />
+            </svg>
+            <span>Back to Suppliers</span>
           </Link>
         </div>
       </div>
@@ -211,7 +215,7 @@ export default async function SupplierDetailPage({
                           {doc.createdBy.name}
                         </td>
                         <td className="px-4 py-3 text-right font-mono-nums font-semibold">
-                          ${totals.totalFormatted}
+                          {totals.totalFormatted}
                         </td>
                         <td className="px-4 py-3 text-right text-xs" style={{ color: "var(--muted-foreground)" }}>
                           {doc.createdAt.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
