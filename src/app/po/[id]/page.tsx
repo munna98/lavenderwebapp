@@ -202,8 +202,16 @@ export default async function PoDetailPage({
             className="rounded-xl border p-5 max-w-xs ml-auto space-y-2.5"
             style={{ background: "var(--surface)", borderColor: "var(--border)" }}
           >
-            <div className="flex justify-between items-center">
-              <span className="font-semibold text-base">Grand Total</span>
+            <div className="flex justify-between items-center text-sm">
+              <span style={{ color: "var(--muted-foreground)" }}>Subtotal</span>
+              <span className="font-mono-nums">{totals.subtotalFormatted}</span>
+            </div>
+            <div className="flex justify-between items-center text-sm">
+              <span style={{ color: "var(--muted-foreground)" }}>VAT (5%)</span>
+              <span className="font-mono-nums">{totals.totalTaxFormatted}</span>
+            </div>
+            <div className="border-t pt-2.5 flex justify-between items-center" style={{ borderColor: "var(--border)" }}>
+              <span className="font-semibold text-base">Total</span>
               <span className="font-mono-nums text-lg font-bold" style={{ color: "var(--accent)" }}>
                 {totals.totalFormatted}
               </span>

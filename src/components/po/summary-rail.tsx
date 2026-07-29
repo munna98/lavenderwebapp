@@ -41,6 +41,11 @@ export default function SummaryRail({ totals, isPending, isEditing, register }: 
           <span className="font-mono-nums">{fmt(totals.subtotal)}</span>
         </div>
 
+        <div className="flex items-center justify-between text-sm">
+          <span style={{ color: "var(--muted-foreground)" }}>VAT (5%)</span>
+          <span className="font-mono-nums">{fmt(totals.totalTax)}</span>
+        </div>
+
         <div
           className="border-t pt-2.5"
           style={{ borderColor: "var(--border)" }}

@@ -232,8 +232,8 @@ export async function sendDocument(documentId: string): Promise<ActionResult> {
       from: process.env.RESEND_FROM_EMAIL ?? "orders@lavenderautoparts.com",
       replyTo: document.createdBy.email,
       to: [targetEmail],
-      subject: `Purchase Order ${document.number} — Lavender Auto Parts`,
-      text: `Dear ${document.supplier.name},\n\nPlease find attached Purchase Order ${document.number} from Lavender Auto Parts.\n\nTotal: ${totals.totalFormatted}\n\nKind regards,\n${document.createdBy.name}\nLavender Auto Parts`,
+      subject: `Purchase Order ${document.number} — Lavender Auto Spare Parts`,
+      text: `Dear ${document.supplier.name},\n\nPlease find attached Purchase Order ${document.number} from Lavender Auto Spare Parts.\n\nTotal: ${totals.totalFormatted}\n\nKind regards,\n${document.createdBy.name}\nLavender Auto Spare Parts`,
       attachments: [
         {
           filename: `${document.number}.pdf`,
