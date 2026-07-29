@@ -65,8 +65,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     marginTop: 2,
   },
-  addressCol: {
-    width: "48%",
+  addressColLeft: {
+    width: "50%",
+  },
+  addressColRight: {
+    width: "40%",
+    paddingLeft: 20,
   },
   sectionLabel: {
     fontSize: 8,
@@ -89,7 +93,7 @@ const styles = StyleSheet.create({
   },
   table: {
     width: "100%",
-    marginBottom: 16,
+    marginBottom: 10,
   },
   tableHeader: {
     flexDirection: "row",
@@ -112,6 +116,45 @@ const styles = StyleSheet.create({
   colDesc: { width: "42%" },
   colQty: { width: "10%", textAlign: "right" },
   colRate: { width: "12%", textAlign: "right" },
+
+  totalsContainer: {
+    width: "38%",
+    marginLeft: "auto",
+    marginTop: 4,
+    marginBottom: 12,
+    paddingTop: 4,
+  },
+  totalRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 2,
+  },
+  totalLabel: {
+    fontSize: 8.5,
+    color: "#333333",
+  },
+  totalValue: {
+    fontSize: 8.5,
+    fontWeight: "bold",
+    textAlign: "right",
+  },
+  grandTotalRow: {
+    borderTopWidth: 1,
+    borderTopColor: "#000000",
+    paddingTop: 4,
+    marginTop: 4,
+  },
+  grandTotalLabel: {
+    fontSize: 9,
+    fontWeight: "bold",
+    color: "#000000",
+  },
+  grandTotalValue: {
+    fontSize: 9.5,
+    fontWeight: "bold",
+    color: "#000000",
+    textAlign: "right",
+  },
 
   notesSection: {
     borderTopWidth: 1,
@@ -149,6 +192,17 @@ export default function PurchaseOrderPdf({ document: doc }: Props) {
   const headerBannerPath = path.join(process.cwd(), "public", "images", "header-banner.png");
   const footerBannerPath = path.join(process.cwd(), "public", "images", "footer-banner.png");
 
+  // Calculate Subtotal, 5% VAT, and Grand Total
+  const subtotal = doc.items.reduce((acc, item) => acc + Number(item.qty) * Number(item.rate), 0);
+  const vatAmount = subtotal * 0.05;
+  const grandTotal = subtotal + vatAmount;
+
+  const fmt = (num: number) =>
+    num.toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
   return (
     <Document title={`PO_${doc.number}`}>
       <Page size="A4" style={styles.page}>
@@ -164,7 +218,7 @@ export default function PurchaseOrderPdf({ document: doc }: Props) {
 
         {/* Supplier & PO Details */}
         <View style={styles.addressGrid}>
-          <View style={styles.addressCol}>
+          <View style={styles.addressColLeft}>
             <Text style={styles.sectionLabel}>Supplier</Text>
             <Text style={styles.partyName}>{supplierName}</Text>
             {supplierAddress && <Text style={styles.addressText}>{supplierAddress}</Text>}
@@ -173,11 +227,11 @@ export default function PurchaseOrderPdf({ document: doc }: Props) {
             {supplierTaxId && <Text style={styles.addressText}>Tax ID: {supplierTaxId}</Text>}
           </View>
 
-          <View style={styles.addressCol}>
+          <View style={styles.addressColRight}>
             <Text style={styles.sectionLabel}>PO Details</Text>
             <Text style={styles.partyName}>{doc.number}</Text>
             <Text style={styles.addressText}>Date: {dateStr}</Text>
-            <Text style={styles.addressText}>Issued By: Lavender Auto Parts</Text>
+            <Text style={styles.addressText}>Issued By: Lavender Auto Spare Parts</Text>
             <Text style={styles.addressText}>Prepared by: {doc.createdBy.name}</Text>
             <Text style={styles.addressText}>Email: {doc.createdBy.email}</Text>
           </View>
@@ -203,10 +257,26 @@ export default function PurchaseOrderPdf({ document: doc }: Props) {
                 <Text style={styles.colPartNo}>{item.partNumber}</Text>
                 <Text style={styles.colDesc}>{item.name || "—"}</Text>
                 <Text style={styles.colQty}>{qty.toString()}</Text>
-                <Text style={styles.colRate}>{rate.toFixed(2)}</Text>
+                <Text style={styles.colRate}>{fmt(rate)}</Text>
               </View>
             );
           })}
+        </View>
+
+        {/* Totals Summary Box (Subtotal + 5% VAT) */}
+        <View style={styles.totalsContainer}>
+          <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}>Subtotal:</Text>
+            <Text style={styles.totalValue}>{fmt(subtotal)}</Text>
+          </View>
+          <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}>VAT (5%):</Text>
+            <Text style={styles.totalValue}>{fmt(vatAmount)}</Text>
+          </View>
+          <View style={[styles.totalRow, styles.grandTotalRow]}>
+            <Text style={styles.grandTotalLabel}>Total (incl. VAT):</Text>
+            <Text style={styles.grandTotalValue}>{fmt(grandTotal)}</Text>
+          </View>
         </View>
 
         {/* Notes */}
