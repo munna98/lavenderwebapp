@@ -24,9 +24,7 @@ type Props = {
 
 const DEFAULT_ITEM = { partNumber: "", name: "", qty: 1, rate: 0, taxPercent: 0 };
 
-const DEFAULT_NOTES = `Kindly notify us in advance if any part is unavailable or if there are any price changes or discrepancies before supplying the order.
-
-Please notify us immediately of any stock unavailability, price changes, or discrepancies before processing and dispatching this order.`;
+const DEFAULT_NOTES = `Please notify us immediately of any stock unavailability, price changes, or discrepancies before processing and dispatching this order.`;
 
 export default function NewPoForm({ suppliers, initialData }: Props) {
   const [isPending, startTransition] = useTransition();
