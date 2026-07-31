@@ -35,6 +35,10 @@ export default async function PoListPage() {
       }))
     );
 
+    const partNumbers = doc.items
+      .map((i) => i.partNumber)
+      .filter(Boolean);
+
     return {
       id: doc.id,
       number: doc.number,
@@ -45,6 +49,7 @@ export default async function PoListPage() {
       createdBy: doc.createdBy,
       customerName: doc.customerName,
       customerContact: doc.customerContact,
+      partNumbers,
       itemsCount: doc.items.length,
       totalFormatted: totals.totalFormatted,
     };

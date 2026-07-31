@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { Supplier } from "@prisma/client";
+import Pagination from "@/components/ui/pagination";
 
 type SupplierWithCount = Supplier & { _count: { documents: number } };
 
@@ -13,6 +14,13 @@ type Props = {
 
 export default function SuppliersClient({ suppliers, isAdmin }: Props) {
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+
+  function handleSearchChange(val: string) {
+    setSearch(val);
+    setCurrentPage(1);
+  }
 
   const filtered = suppliers.filter(
     (s) =>
@@ -20,6 +28,8 @@ export default function SuppliersClient({ suppliers, isAdmin }: Props) {
       s.email?.toLowerCase().includes(search.toLowerCase()) ||
       s.taxId?.toLowerCase().includes(search.toLowerCase())
   );
+
+  const paginated = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
     <div className="space-y-3">
@@ -44,7 +54,7 @@ export default function SuppliersClient({ suppliers, isAdmin }: Props) {
           type="search"
           placeholder="Search by name, email, or tax ID…"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => handleSearchChange(e.target.value)}
           className="w-full pl-9 pr-4 py-2.5 rounded-lg border text-sm outline-none"
           style={{
             borderColor: "var(--border)",
@@ -94,7 +104,7 @@ export default function SuppliersClient({ suppliers, isAdmin }: Props) {
                 </td>
               </tr>
             ) : (
-              filtered.map((supplier, idx) => (
+              paginated.map((supplier, idx) => (
                 <tr
                   key={supplier.id}
                   style={{
@@ -142,6 +152,18 @@ export default function SuppliersClient({ suppliers, isAdmin }: Props) {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination Controls */}
+      <Pagination
+        currentPage={currentPage}
+        pageSize={pageSize}
+        totalItems={filtered.length}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(sz) => {
+          setPageSize(sz);
+          setCurrentPage(1);
+        }}
+      />
     </div>
   );
 }

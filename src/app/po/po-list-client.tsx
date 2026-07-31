@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { DocumentStatus } from "@prisma/client";
+import Pagination from "@/components/ui/pagination";
 
 type PoItem = {
   id: string;
@@ -15,6 +16,7 @@ type PoItem = {
   createdBy: { id: string; name: string };
   customerName?: string | null;
   customerContact?: string | null;
+  partNumbers?: string[];
   itemsCount: number;
   totalFormatted: string;
 };
@@ -28,22 +30,49 @@ export default function PoListClient({ pos, suppliers }: Props) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [supplierFilter, setSupplierFilter] = useState<string>("ALL");
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+
   const router = useRouter();
 
+  function handleSearchChange(val: string) {
+    setSearch(val);
+    setCurrentPage(1);
+  }
+
+  function handleStatusFilterChange(val: string) {
+    setStatusFilter(val);
+    setCurrentPage(1);
+  }
+
+  function handleSupplierFilterChange(val: string) {
+    setSupplierFilter(val);
+    setCurrentPage(1);
+  }
+
   const filtered = pos.filter((item) => {
-    const q = search.toLowerCase();
+    const rawQ = search.toLowerCase();
+    const cleanQ = rawQ.replace(/\s+/g, "");
+
     const matchesSearch =
-      item.number.toLowerCase().includes(q) ||
-      item.supplier.name.toLowerCase().includes(q) ||
-      item.createdBy.name.toLowerCase().includes(q) ||
-      (item.customerName && item.customerName.toLowerCase().includes(q)) ||
-      (item.customerContact && item.customerContact.toLowerCase().includes(q));
+      item.number.toLowerCase().includes(rawQ) ||
+      item.supplier.name.toLowerCase().includes(rawQ) ||
+      item.createdBy.name.toLowerCase().includes(rawQ) ||
+      (item.customerName && item.customerName.toLowerCase().includes(rawQ)) ||
+      (item.customerContact && item.customerContact.toLowerCase().includes(rawQ)) ||
+      (item.partNumbers &&
+        item.partNumbers.some(
+          (p) => p.toLowerCase().includes(rawQ) || p.toLowerCase().includes(cleanQ)
+        ));
 
     const matchesStatus = statusFilter === "ALL" || item.status === statusFilter;
     const matchesSupplier = supplierFilter === "ALL" || item.supplier.id === supplierFilter;
 
     return matchesSearch && matchesStatus && matchesSupplier;
   });
+
+  const paginated = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const badgeStyles = {
     DRAFT: { background: "var(--status-draft-bg)", color: "var(--status-draft-text)" },
@@ -60,9 +89,9 @@ export default function PoListClient({ pos, suppliers }: Props) {
           <input
             id="po-list-search"
             type="search"
-            placeholder="Search PO #, supplier, customer, or creator..."
+            placeholder="Search PO #, part #, supplier, customer, or creator..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="w-full px-3 py-2 rounded-lg border text-sm outline-none"
             style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
           />
@@ -72,7 +101,7 @@ export default function PoListClient({ pos, suppliers }: Props) {
         <select
           id="po-status-filter"
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
+          onChange={(e) => handleStatusFilterChange(e.target.value)}
           className="px-3 py-2 rounded-lg border text-sm outline-none cursor-pointer"
           style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
         >
@@ -86,7 +115,7 @@ export default function PoListClient({ pos, suppliers }: Props) {
         <select
           id="po-supplier-filter"
           value={supplierFilter}
-          onChange={(e) => setSupplierFilter(e.target.value)}
+          onChange={(e) => handleSupplierFilterChange(e.target.value)}
           className="px-3 py-2 rounded-lg border text-sm outline-none cursor-pointer"
           style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
         >
@@ -123,7 +152,7 @@ export default function PoListClient({ pos, suppliers }: Props) {
                 </td>
               </tr>
             ) : (
-              filtered.map((item, idx) => (
+              paginated.map((item, idx) => (
                 <tr
                   key={item.id}
                   onClick={() => router.push(`/po/${item.id}`)}
@@ -182,6 +211,18 @@ export default function PoListClient({ pos, suppliers }: Props) {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination Controls */}
+      <Pagination
+        currentPage={currentPage}
+        pageSize={pageSize}
+        totalItems={filtered.length}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(sz) => {
+          setPageSize(sz);
+          setCurrentPage(1);
+        }}
+      />
     </div>
   );
 }

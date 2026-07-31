@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import type { User } from "@prisma/client";
 import { createUser, updateUser } from "@/lib/actions/users";
+import Pagination from "@/components/ui/pagination";
 
 type Props = { users: User[] };
 
@@ -11,6 +12,11 @@ export default function UsersTable({ users: initialUsers }: Props) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+
+  const paginated = users.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   function handleCreateSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -198,7 +204,7 @@ export default function UsersTable({ users: initialUsers }: Props) {
                 </td>
               </tr>
             ) : (
-              users.map((user, idx) => (
+              paginated.map((user, idx) => (
                 <tr
                   key={user.id}
                   style={{
@@ -248,6 +254,18 @@ export default function UsersTable({ users: initialUsers }: Props) {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination Controls */}
+      <Pagination
+        currentPage={currentPage}
+        pageSize={pageSize}
+        totalItems={users.length}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(sz) => {
+          setPageSize(sz);
+          setCurrentPage(1);
+        }}
+      />
     </div>
   );
 }
