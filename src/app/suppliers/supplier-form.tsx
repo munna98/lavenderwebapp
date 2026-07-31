@@ -9,28 +9,56 @@ type Props = {
   submitLabel?: string;
 };
 
-const fields = [
-  { name: "name", label: "Supplier name", type: "text", required: true, placeholder: "e.g. Premium Parts Co." },
-  { name: "address", label: "Address", type: "textarea", required: false, placeholder: "Street, City, State, ZIP" },
-  { name: "phone", label: "Phone", type: "tel", required: false, placeholder: "+1 (555) 000-0000" },
-  { name: "email", label: "Email", type: "email", required: false, placeholder: "accounts@supplier.com" },
-  { name: "taxId", label: "Tax ID", type: "text", required: false, placeholder: "e.g. 12-3456789" },
-] as const;
-
 export default function SupplierForm({ supplier, action, submitLabel = "Save supplier" }: Props) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+
+  // Parse initial email list from supplier.email & supplier.additionalEmails
+  const initialEmails = (() => {
+    const list: string[] = [];
+    if (supplier?.email?.trim()) list.push(supplier.email.trim());
+    if (supplier?.additionalEmails?.trim()) {
+      const parts = supplier.additionalEmails.split(/[,;\n]+/).map((e) => e.trim()).filter(Boolean);
+      list.push(...parts);
+    }
+    return list.length > 0 ? list : [""];
+  })();
+
+  const [emails, setEmails] = useState<string[]>(initialEmails);
+
+  function handleEmailChange(index: number, value: string) {
+    const updated = [...emails];
+    updated[index] = value;
+    setEmails(updated);
+  }
+
+  function addEmailRow() {
+    setEmails([...emails, ""]);
+  }
+
+  function removeEmailRow(index: number) {
+    if (emails.length === 1) {
+      setEmails([""]);
+    } else {
+      setEmails(emails.filter((_, i) => i !== index));
+    }
+  }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
     const formData = new FormData(e.currentTarget);
+
+    // Filter out empty entries
+    const validEmails = emails.map((e) => e.trim()).filter(Boolean);
+    formData.set("email", validEmails[0] || "");
+    formData.set("additionalEmails", validEmails.slice(1).join(", "));
+
     startTransition(async () => {
       const result = await action(formData);
       if (!result.success) {
         setError(result.error);
       }
-      // On success the server action calls redirect(), so nothing to do here
     });
   }
 
@@ -45,54 +73,122 @@ export default function SupplierForm({ supplier, action, submitLabel = "Save sup
         </div>
       )}
 
-      {fields.map((field) => (
-        <div key={field.name}>
-          <label
-            htmlFor={`supplier-${field.name}`}
-            className="block text-sm font-medium mb-1.5"
-            style={{ color: "var(--foreground)" }}
-          >
-            {field.label}
-            {field.required && (
-              <span className="ml-1" style={{ color: "var(--brass)" }}>*</span>
-            )}
-          </label>
+      {/* Supplier Name */}
+      <div>
+        <label htmlFor="supplier-name" className="block text-sm font-medium mb-1.5" style={{ color: "var(--foreground)" }}>
+          Supplier name <span className="ml-1" style={{ color: "var(--brass)" }}>*</span>
+        </label>
+        <input
+          id="supplier-name"
+          name="name"
+          type="text"
+          required
+          placeholder="e.g. Premium Parts Co."
+          defaultValue={supplier?.name}
+          disabled={isPending}
+          className="w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-all"
+          style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
+        />
+      </div>
 
-          {field.type === "textarea" ? (
-            <textarea
-              id={`supplier-${field.name}`}
-              name={field.name}
-              required={field.required}
-              placeholder={field.placeholder}
-              defaultValue={supplier?.[field.name as keyof Supplier] as string | undefined}
-              rows={3}
-              disabled={isPending}
-              className="w-full px-3 py-2.5 rounded-lg border text-sm outline-none resize-none transition-all"
-              style={{
-                borderColor: "var(--border)",
-                background: "var(--surface)",
-                color: "var(--foreground)",
-              }}
-            />
-          ) : (
-            <input
-              id={`supplier-${field.name}`}
-              name={field.name}
-              type={field.type}
-              required={field.required}
-              placeholder={field.placeholder}
-              defaultValue={supplier?.[field.name as keyof Supplier] as string | undefined}
-              disabled={isPending}
-              className="w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-all"
-              style={{
-                borderColor: "var(--border)",
-                background: "var(--surface)",
-                color: "var(--foreground)",
-              }}
-            />
-          )}
+      {/* Dynamic Multi-Email List */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <label className="block text-sm font-medium" style={{ color: "var(--foreground)" }}>
+            Email Addresses
+          </label>
+          <button
+            type="button"
+            onClick={addEmailRow}
+            className="text-xs font-semibold cursor-pointer transition-colors hover:underline"
+            style={{ color: "var(--accent)" }}
+          >
+            + Add another email
+          </button>
         </div>
-      ))}
+
+        <div className="space-y-2">
+          {emails.map((emailVal, idx) => (
+            <div key={idx} className="flex items-center gap-2">
+              <input
+                type="email"
+                value={emailVal}
+                onChange={(e) => handleEmailChange(idx, e.target.value)}
+                placeholder={idx === 0 ? "Primary Email (e.g. accounts@supplier.com)" : `Additional Email #${idx + 1}`}
+                disabled={isPending}
+                className="w-full px-3 py-2 rounded-lg border text-sm outline-none transition-all focus:border-accent"
+                style={{
+                  borderColor: "var(--border)",
+                  background: "var(--surface)",
+                  color: "var(--foreground)",
+                }}
+              />
+              {emails.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeEmailRow(idx)}
+                  className="w-8.5 h-8.5 rounded-lg border flex items-center justify-center cursor-pointer hover:bg-surface-raised transition-colors shrink-0 text-xs"
+                  style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}
+                  title="Remove email"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Phone */}
+      <div>
+        <label htmlFor="supplier-phone" className="block text-sm font-medium mb-1.5" style={{ color: "var(--foreground)" }}>
+          Phone
+        </label>
+        <input
+          id="supplier-phone"
+          name="phone"
+          type="tel"
+          placeholder="+1 (555) 000-0000"
+          defaultValue={supplier?.phone || ""}
+          disabled={isPending}
+          className="w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-all"
+          style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
+        />
+      </div>
+
+      {/* Address */}
+      <div>
+        <label htmlFor="supplier-address" className="block text-sm font-medium mb-1.5" style={{ color: "var(--foreground)" }}>
+          Address
+        </label>
+        <textarea
+          id="supplier-address"
+          name="address"
+          placeholder="Street, City, State, ZIP"
+          defaultValue={supplier?.address || ""}
+          rows={3}
+          disabled={isPending}
+          className="w-full px-3 py-2.5 rounded-lg border text-sm outline-none resize-none transition-all"
+          style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
+        />
+      </div>
+
+      {/* Tax ID */}
+      <div>
+        <label htmlFor="supplier-taxId" className="block text-sm font-medium mb-1.5" style={{ color: "var(--foreground)" }}>
+          Tax ID
+        </label>
+        <input
+          id="supplier-taxId"
+          name="taxId"
+          type="text"
+          placeholder="e.g. 12-3456789"
+          defaultValue={supplier?.taxId || ""}
+          disabled={isPending}
+          className="w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-all"
+          style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
+        />
+      </div>
 
       <div className="flex gap-3 pt-2">
         <button

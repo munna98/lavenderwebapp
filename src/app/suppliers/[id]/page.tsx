@@ -107,11 +107,16 @@ export default async function SupplierDetailPage({
 
             <div>
               <p className="text-xs font-medium uppercase tracking-wider" style={{ color: "var(--muted-foreground)" }}>
-                Email
+                Email Addresses
               </p>
               <p className="text-sm font-medium mt-0.5" style={{ color: "var(--foreground)" }}>
                 {supplier.email || "—"}
               </p>
+              {supplier.additionalEmails && (
+                <p className="text-xs mt-1 font-mono-nums" style={{ color: "var(--muted-foreground)" }}>
+                  Additional: {supplier.additionalEmails}
+                </p>
+              )}
             </div>
 
             <div>

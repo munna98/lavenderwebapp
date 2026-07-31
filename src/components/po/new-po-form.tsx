@@ -26,6 +26,22 @@ const DEFAULT_ITEM = { partNumber: "", name: "", qty: 1, rate: 0, taxPercent: 0 
 
 const DEFAULT_NOTES = `Please notify us immediately of any stock unavailability, price changes, or discrepancies before processing and dispatching this order.`;
 
+function getSupplierEmails(supplier?: Supplier | null): string[] {
+  if (!supplier) return [];
+  const emails: string[] = [];
+  if (supplier.email && supplier.email.trim()) {
+    emails.push(supplier.email.trim());
+  }
+  if (supplier.additionalEmails && supplier.additionalEmails.trim()) {
+    const parts = supplier.additionalEmails
+      .split(/[,;\n]+/)
+      .map((e) => e.trim())
+      .filter((e) => e.length > 0 && !emails.includes(e));
+    emails.push(...parts);
+  }
+  return emails;
+}
+
 export default function NewPoForm({ suppliers, initialData }: Props) {
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -62,6 +78,11 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
   });
 
   const items = form.watch("items");
+  const selectedSupplierId = form.watch("supplierId");
+  const currentSupplierEmail = form.watch("supplierEmail");
+
+  const selectedSupplier = suppliers.find((s) => s.id === selectedSupplierId);
+  const availableEmails = getSupplierEmails(selectedSupplier);
 
   const totals = computeDisplayTotals(items);
 
@@ -161,7 +182,7 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
             </div>
           )}
 
-          {/* Supplier & Optional Supplier Email Override */}
+          {/* Supplier & Clean Email Dropdown Selection */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1.5">
@@ -177,8 +198,9 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
                     onChange={(selectedId) => {
                       field.onChange(selectedId);
                       const selectedSup = suppliers.find((s) => s.id === selectedId);
-                      if (selectedSup?.email) {
-                        form.setValue("supplierEmail", selectedSup.email);
+                      const emails = getSupplierEmails(selectedSup);
+                      if (emails.length > 0) {
+                        form.setValue("supplierEmail", emails[0]);
                       }
                     }}
                     onEnterNext={() => focusInput(0, "partNumber")}
@@ -196,13 +218,28 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
               <label className="block text-sm font-medium mb-1.5">
                 Supplier Email <span className="text-xs font-normal" style={{ color: "var(--muted-foreground)" }}>(for this PO)</span>
               </label>
-              <input
-                {...form.register("supplierEmail")}
-                type="email"
-                placeholder="Order recipient email address"
-                className="w-full px-3 py-2 rounded-lg border text-sm outline-none focus:border-accent"
-                style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
-              />
+              {availableEmails.length > 0 ? (
+                <select
+                  value={availableEmails.includes(currentSupplierEmail || "") ? currentSupplierEmail || "" : availableEmails[0]}
+                  onChange={(e) => form.setValue("supplierEmail", e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border text-sm outline-none focus:border-accent font-mono-nums"
+                  style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
+                >
+                  {availableEmails.map((email, idx) => (
+                    <option key={email} value={email}>
+                      {email} {idx === 0 ? "(Primary)" : ""}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  {...form.register("supplierEmail")}
+                  type="email"
+                  placeholder="Order recipient email address"
+                  className="w-full px-3 py-2 rounded-lg border text-sm outline-none focus:border-accent font-mono-nums"
+                  style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
+                />
+              )}
             </div>
           </div>
 

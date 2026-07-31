@@ -20,6 +20,7 @@ export async function createSupplier(
     address: formData.get("address") || undefined,
     phone: formData.get("phone") || undefined,
     email: formData.get("email") || undefined,
+    additionalEmails: formData.get("additionalEmails") || undefined,
     taxId: formData.get("taxId") || undefined,
   });
 
@@ -37,6 +38,7 @@ export async function createSupplier(
         address: parsed.data.address ?? null,
         phone: parsed.data.phone ?? null,
         email: parsed.data.email || null,
+        additionalEmails: parsed.data.additionalEmails || null,
         taxId: parsed.data.taxId ?? null,
       },
     });
@@ -60,6 +62,7 @@ export async function updateSupplier(
     address: formData.get("address") || undefined,
     phone: formData.get("phone") || undefined,
     email: formData.get("email") || undefined,
+    additionalEmails: formData.get("additionalEmails") || undefined,
     taxId: formData.get("taxId") || undefined,
   });
 
@@ -76,6 +79,7 @@ export async function updateSupplier(
         address: parsed.data.address ?? null,
         phone: parsed.data.phone ?? null,
         email: parsed.data.email || null,
+        additionalEmails: parsed.data.additionalEmails || null,
         taxId: parsed.data.taxId ?? null,
       },
     });

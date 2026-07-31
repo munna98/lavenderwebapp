@@ -45,14 +45,15 @@ model User {
 }
 
 model Supplier {
-  id        String   @id @default(uuid())
-  name      String
-  address   String?
-  phone     String?
-  email     String?
-  taxId     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id               String   @id @default(uuid())
+  name             String
+  address          String?
+  phone            String?
+  email            String?
+  additionalEmails String? // Comma-separated additional email addresses for PO dispatch
+  taxId            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   documents Document[]
 

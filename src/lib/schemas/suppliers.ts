@@ -5,6 +5,7 @@ export const SupplierSchema = z.object({
   address: z.string().optional(),
   phone: z.string().optional(),
   email: z.string().email("Invalid email address").optional().or(z.literal("")),
+  additionalEmails: z.string().optional(),
   taxId: z.string().optional(),
 });
 

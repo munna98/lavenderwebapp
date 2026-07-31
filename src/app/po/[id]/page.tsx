@@ -4,6 +4,7 @@ import { computeTotals } from "@/lib/utils/totals";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import PoActions from "./po-actions";
+import NewPoPage from "@/app/po/new/page";
 
 export async function generateMetadata({
   params,
@@ -11,6 +12,9 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
+  if (id === "new") {
+    return { title: "New Purchase Order — Lavender Auto Spare Parts" };
+  }
   const doc = await prisma.document.findUnique({ where: { id }, select: { number: true } });
   return {
     title: doc ? `${doc.number} — Purchase Order` : "Purchase Order",
@@ -23,6 +27,10 @@ export default async function PoDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+
+  if (id === "new") {
+    return <NewPoPage />;
+  }
 
   // Run auth check and DB query concurrently in parallel to eliminate query waterfalls
   const [auth, doc] = await Promise.all([
