@@ -292,21 +292,21 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
               </button>
             </div>
 
-            {/* ── Mobile Card List ──────────────────────── */}
-            <div className="sm:hidden space-y-3">
+            {/* ── Mobile Card List (Clean Minimal Inline Text) ─────────── */}
+            <div className="sm:hidden space-y-2.5">
               {isFirstItemUntouched ? (
                 /* Clean Empty State CTA on Mobile when no items added yet */
                 <div
                   onClick={openDrawerForNew}
-                  className="rounded-xl border p-6 text-center cursor-pointer transition-all hover:bg-surface-raised space-y-2.5"
+                  className="rounded-xl border p-5 text-center cursor-pointer transition-all hover:bg-surface-raised space-y-2"
                   style={{
-                    borderColor: "var(--border-strong)",
+                    borderColor: "var(--border)",
                     borderStyle: "dashed",
                     background: "var(--surface)",
                   }}
                 >
-                  <div className="w-10 h-10 rounded-full mx-auto flex items-center justify-center" style={{ background: "var(--accent-soft)", color: "var(--accent)" }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <div className="w-9 h-9 rounded-full mx-auto flex items-center justify-center" style={{ background: "var(--accent-soft)", color: "var(--accent)" }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="12" y1="5" x2="12" y2="19" />
                       <line x1="5" y1="12" x2="19" y2="12" />
                     </svg>
@@ -325,97 +325,61 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
                     return (
                       <div
                         key={field.id}
-                        className="relative rounded-xl border p-4 transition-all space-y-2.5 shadow-xs hover:shadow-md"
+                        className="rounded-xl border p-3.5 space-y-2 transition-colors hover:bg-surface-raised cursor-pointer"
                         style={{
                           background: "var(--surface)",
                           borderColor: "var(--border)",
                         }}
+                        onClick={() => openDrawerForEdit(idx)}
                       >
-                        {/* Header: Sl No + Part Number Pill + Action Buttons */}
+                        {/* Header: Sl No + Part Number + Actions */}
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span
-                              className="w-5 h-5 rounded-md flex items-center justify-center text-[11px] font-mono-nums font-bold"
-                              style={{ background: "var(--surface-raised)", color: "var(--muted-foreground)" }}
-                            >
-                              {idx + 1}
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="text-xs font-mono-nums font-medium" style={{ color: "var(--muted-foreground)" }}>
+                              #{idx + 1}
                             </span>
-                            <span
-                              className="text-xs font-mono-nums font-semibold tracking-tight px-2 py-0.5 rounded-md"
-                              style={{
-                                background: item.partNumber ? "var(--accent-soft)" : "var(--surface-raised)",
-                                color: item.partNumber ? "var(--accent)" : "var(--muted-foreground)",
-                              }}
-                            >
+                            <span className="font-semibold text-sm font-mono-nums truncate" style={{ color: "var(--accent)" }}>
                               {item.partNumber || "No Part #"}
                             </span>
                           </div>
 
-                          <div className="flex items-center gap-1.5">
-                            {/* Edit Button */}
+                          <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
                             <button
                               type="button"
                               onClick={() => openDrawerForEdit(idx)}
-                              className="p-1.5 rounded-md text-xs font-medium cursor-pointer transition-colors"
-                              style={{ color: "var(--accent)", background: "var(--accent-soft)" }}
-                              title="Edit Item"
+                              className="text-xs font-medium cursor-pointer"
+                              style={{ color: "var(--accent)" }}
                             >
-                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                              </svg>
+                              Edit
                             </button>
-
-                            {/* Delete Button */}
                             {fields.length > 1 && (
                               <button
                                 type="button"
                                 onClick={() => remove(idx)}
-                                className="p-1.5 rounded-md text-xs cursor-pointer transition-colors"
-                                style={{ color: "var(--muted-foreground)", background: "var(--surface-raised)" }}
-                                title="Remove Item"
+                                className="text-xs cursor-pointer px-1"
+                                style={{ color: "var(--muted-foreground)" }}
                               >
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <line x1="18" y1="6" x2="6" y2="18" />
-                                  <line x1="6" y1="6" x2="18" y2="18" />
-                                </svg>
+                                ✕
                               </button>
                             )}
                           </div>
                         </div>
 
-                        {/* Body: Description & Quantities (Tappable) */}
-                        <div
-                          onClick={() => openDrawerForEdit(idx)}
-                          className="cursor-pointer space-y-2 pt-1.5 border-t"
-                          style={{ borderColor: "var(--surface-raised)" }}
-                        >
-                          {/* Description */}
-                          <p
-                            className="text-xs leading-relaxed"
-                            style={{
-                              color: item.name ? "var(--foreground)" : "var(--muted-foreground-soft)",
-                              fontStyle: item.name ? "normal" : "italic",
-                            }}
-                          >
-                            {item.name || "Tap to add description…"}
+                        {/* Description */}
+                        {item.name && (
+                          <p className="text-xs leading-relaxed" style={{ color: "var(--foreground)" }}>
+                            {item.name}
                           </p>
+                        )}
 
-                          {/* Qty, Rate & Line Total */}
-                          <div className="flex items-center justify-between pt-1">
-                            <div className="flex items-center gap-1.5 text-xs font-mono-nums">
-                              <span className="px-2 py-0.5 rounded-md" style={{ background: "var(--surface-raised)", color: "var(--muted-foreground)" }}>
-                                Qty: <strong style={{ color: "var(--foreground)" }}>{Number(item.qty) || 1}</strong>
-                              </span>
-                              <span className="px-2 py-0.5 rounded-md" style={{ background: "var(--surface-raised)", color: "var(--muted-foreground)" }}>
-                                Rate: <strong style={{ color: "var(--foreground)" }}>{Number(item.rate) ? formatAmount(Number(item.rate)) : "0.00"}</strong>
-                              </span>
-                            </div>
-
-                            <div className="text-right font-mono-nums text-sm font-bold" style={{ color: "var(--accent)" }}>
-                              {formatAmount(lineGross)}
-                            </div>
-                          </div>
+                        {/* Qty, Rate & Line Total */}
+                        <div className="flex items-center justify-between pt-1.5 text-xs font-mono-nums border-t" style={{ borderColor: "var(--border)" }}>
+                          <span style={{ color: "var(--muted-foreground)" }}>
+                            {Number(item.qty) || 1} × {Number(item.rate) ? formatAmount(Number(item.rate)) : "0.00"}
+                          </span>
+                          <span className="font-semibold text-sm" style={{ color: "var(--foreground)" }}>
+                            {formatAmount(lineGross)}
+                          </span>
                         </div>
                       </div>
                     );
@@ -425,9 +389,9 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
                   <button
                     type="button"
                     onClick={openDrawerForNew}
-                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-semibold transition-all cursor-pointer hover:bg-surface-raised active:scale-[0.99]"
+                    className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border text-sm font-semibold transition-all cursor-pointer hover:bg-surface-raised"
                     style={{
-                      borderColor: "var(--border-strong)",
+                      borderColor: "var(--border)",
                       borderStyle: "dashed",
                       color: "var(--accent)",
                       background: "var(--surface)",
