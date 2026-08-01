@@ -17,16 +17,21 @@ export default function PoActions({ documentId, status, supplierEmail, canCancel
   const [isPending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showSendDialog, setShowSendDialog] = useState(false);
 
-  function handleSend() {
+  function handleSendClick() {
     if (!supplierEmail) {
       setFeedback({ type: "error", message: "Supplier email address is missing." });
       return;
     }
+    setShowSendDialog(true);
+  }
 
+  function handleSendConfirm() {
     setFeedback(null);
     startTransition(async () => {
       const res = await sendDocument(documentId);
+      setShowSendDialog(false);
       if (res.success) {
         setFeedback({ type: "success", message: "Purchase order sent successfully via email!" });
       } else {
@@ -105,7 +110,7 @@ export default function PoActions({ documentId, status, supplierEmail, canCancel
         {status === "DRAFT" && (
           <button
             id="send-po-btn"
-            onClick={handleSend}
+            onClick={handleSendClick}
             disabled={isPending || !supplierEmail}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer transition-colors border-0 disabled:opacity-50"
             style={{
@@ -152,7 +157,20 @@ export default function PoActions({ documentId, status, supplierEmail, canCancel
         </a>
       </div>
 
-      {/* Custom Confirmation Modal Dialog */}
+      {/* Confirmation Modal Dialog for Send Email */}
+      <ConfirmDialog
+        isOpen={showSendDialog}
+        title="Send Purchase Order Email"
+        description={`Are you sure you want to send this purchase order email to ${supplierEmail || "the supplier"}? The official PDF document will be attached and sent.`}
+        confirmLabel="Yes, Send Email"
+        cancelLabel="Cancel"
+        variant="default"
+        isPending={isPending}
+        onConfirm={handleSendConfirm}
+        onClose={() => setShowSendDialog(false)}
+      />
+
+      {/* Confirmation Modal Dialog for Cancel PO */}
       <ConfirmDialog
         isOpen={showCancelDialog}
         title="Cancel Purchase Order"
