@@ -3,6 +3,7 @@
 import { useTransition, useState } from "react";
 import { sendDocument, cancelDocument } from "@/lib/actions/documents";
 import Link from "next/link";
+import ConfirmDialog from "@/components/ui/confirm-dialog";
 
 type Props = {
   documentId: string;
@@ -15,6 +16,7 @@ type Props = {
 export default function PoActions({ documentId, status, supplierEmail, canCancel, canEdit = true }: Props) {
   const [isPending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   function handleSend() {
     if (!supplierEmail) {
@@ -33,12 +35,11 @@ export default function PoActions({ documentId, status, supplierEmail, canCancel
     });
   }
 
-  function handleCancel() {
-    if (!confirm("Are you sure you want to cancel this purchase order?")) return;
-
+  function handleCancelConfirm() {
     setFeedback(null);
     startTransition(async () => {
       const res = await cancelDocument(documentId);
+      setShowCancelDialog(false);
       if (res.success) {
         setFeedback({ type: "success", message: "Purchase order has been cancelled." });
       } else {
@@ -49,6 +50,7 @@ export default function PoActions({ documentId, status, supplierEmail, canCancel
 
   return (
     <div className="space-y-4">
+      {/* Feedback banner */}
       {feedback && (
         <div
           className="px-4 py-3 rounded-lg text-sm border flex items-center justify-between"
@@ -68,6 +70,7 @@ export default function PoActions({ documentId, status, supplierEmail, canCancel
         </div>
       )}
 
+      {/* Action Buttons */}
       <div className="flex flex-wrap items-center gap-3">
         {status === "DRAFT" && canEdit && (
           <Link
@@ -98,7 +101,7 @@ export default function PoActions({ documentId, status, supplierEmail, canCancel
           <span>Download PDF</span>
         </a>
 
-        {/* Send via Email button (Fully Enabled) */}
+        {/* Send via Email button */}
         {status === "DRAFT" && (
           <button
             id="send-po-btn"
@@ -118,10 +121,11 @@ export default function PoActions({ documentId, status, supplierEmail, canCancel
           </button>
         )}
 
+        {/* Cancel Button */}
         {canCancel && status !== "CANCELLED" && (
           <button
             id="cancel-po-btn"
-            onClick={handleCancel}
+            onClick={() => setShowCancelDialog(true)}
             disabled={isPending}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer border disabled:opacity-50 transition-colors"
             style={{ borderColor: "#FCA5A5", color: "#B91C1C", background: "#FEF2F2" }}
@@ -131,7 +135,7 @@ export default function PoActions({ documentId, status, supplierEmail, canCancel
               <line x1="9" y1="9" x2="15" y2="15" />
               <line x1="15" y1="9" x2="9" y2="15" />
             </svg>
-            <span>{isPending ? "Cancelling..." : "Cancel"}</span>
+            <span>Cancel</span>
           </button>
         )}
 
@@ -147,6 +151,19 @@ export default function PoActions({ documentId, status, supplierEmail, canCancel
           <span>Back to List</span>
         </a>
       </div>
+
+      {/* Custom Confirmation Modal Dialog */}
+      <ConfirmDialog
+        isOpen={showCancelDialog}
+        title="Cancel Purchase Order"
+        description="Are you sure you want to cancel this purchase order? This action will mark the status as Cancelled in your records."
+        confirmLabel="Yes, Cancel PO"
+        cancelLabel="Keep PO"
+        variant="danger"
+        isPending={isPending}
+        onConfirm={handleCancelConfirm}
+        onClose={() => setShowCancelDialog(false)}
+      />
     </div>
   );
 }
