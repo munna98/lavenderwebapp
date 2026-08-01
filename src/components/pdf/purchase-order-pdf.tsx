@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderBottomWidth: 1,
     borderBottomColor: "#EFEFEA",
-    paddingVertical: 5,
+    paddingVertical: 6,
     paddingHorizontal: 6,
   },
   colSlNo: { width: "5%", textAlign: "center", color: "#666666", fontSize: 8.5 },

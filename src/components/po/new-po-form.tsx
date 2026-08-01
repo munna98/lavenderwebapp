@@ -182,7 +182,7 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
             </div>
           )}
 
-          {/* Supplier & Clean Email Dropdown Selection */}
+          {/* Supplier & Supplier Email Selection */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1.5">
@@ -219,24 +219,44 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
                 Supplier Email <span className="text-xs font-normal" style={{ color: "var(--muted-foreground)" }}>(for this PO)</span>
               </label>
               {availableEmails.length > 0 ? (
-                <select
-                  value={availableEmails.includes(currentSupplierEmail || "") ? currentSupplierEmail || "" : availableEmails[0]}
-                  onChange={(e) => form.setValue("supplierEmail", e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border text-sm outline-none focus:border-accent font-mono-nums"
-                  style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
-                >
-                  {availableEmails.map((email, idx) => (
-                    <option key={email} value={email}>
-                      {email} {idx === 0 ? "(Primary)" : ""}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <select
+                    value={availableEmails.includes(currentSupplierEmail || "") ? currentSupplierEmail || "" : availableEmails[0]}
+                    onChange={(e) => form.setValue("supplierEmail", e.target.value)}
+                    className="w-full px-3 py-2.5 pr-9 rounded-lg border text-sm outline-none cursor-pointer transition-all appearance-none font-mono-nums focus:border-accent"
+                    style={{
+                      borderColor: "var(--border)",
+                      background: "var(--surface)",
+                      color: "var(--foreground)",
+                    }}
+                  >
+                    {availableEmails.map((email, idx) => (
+                      <option key={email} value={email}>
+                        {email} {idx === 0 ? "(Primary)" : ""}
+                      </option>
+                    ))}
+                  </select>
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
+                    style={{ color: "var(--muted-foreground)" }}
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </div>
               ) : (
                 <input
                   {...form.register("supplierEmail")}
                   type="email"
                   placeholder="Order recipient email address"
-                  className="w-full px-3 py-2 rounded-lg border text-sm outline-none focus:border-accent font-mono-nums"
+                  className="w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-all focus:border-accent font-mono-nums"
                   style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
                 />
               )}
