@@ -37,19 +37,11 @@ export default function LoadingPoDetail() {
 
         {/* Right Column: Line Items Table & Totals */}
         <div className="md:col-span-2 space-y-6">
-          <div className="rounded-xl border overflow-hidden" style={{ borderColor: "var(--border)" }}>
-            <div className="h-10 w-full" style={{ background: "var(--surface-raised)" }} />
-            <div className="p-4 space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex justify-between items-center gap-4">
-                  <div className="h-4 w-12 rounded" style={{ background: "var(--surface-raised)" }} />
-                  <div className="h-4 w-32 rounded" style={{ background: "var(--surface-raised)" }} />
-                  <div className="h-4 flex-1 rounded" style={{ background: "var(--surface-raised)" }} />
-                  <div className="h-4 w-16 rounded" style={{ background: "var(--surface-raised)" }} />
-                  <div className="h-4 w-20 rounded" style={{ background: "var(--surface-raised)" }} />
-                </div>
-              ))}
-            </div>
+          <div className="rounded-xl overflow-hidden space-y-2">
+            <div className="h-10 w-full rounded-lg" style={{ background: "var(--surface-raised)" }} />
+            <div className="h-12 w-full rounded-lg" style={{ background: "var(--surface-raised)" }} />
+            <div className="h-12 w-full rounded-lg" style={{ background: "var(--surface-raised)" }} />
+            <div className="h-12 w-full rounded-lg" style={{ background: "var(--surface-raised)" }} />
           </div>
 
           {/* Summary Box */}

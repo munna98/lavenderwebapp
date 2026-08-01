@@ -18,20 +18,11 @@ export default function LoadingPoList() {
       </div>
 
       {/* Table Skeleton */}
-      <div className="rounded-xl border overflow-hidden" style={{ borderColor: "var(--border)" }}>
-        <div className="h-11 w-full" style={{ background: "var(--surface-raised)" }} />
-        <div className="divide-y" style={{ borderColor: "var(--border)" }}>
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="p-4 flex items-center justify-between gap-4">
-              <div className="h-4 w-24 rounded" style={{ background: "var(--surface-raised)" }} />
-              <div className="h-4 w-40 rounded" style={{ background: "var(--surface-raised)" }} />
-              <div className="h-4 w-28 rounded hidden md:block" style={{ background: "var(--surface-raised)" }} />
-              <div className="h-4 w-24 rounded hidden sm:block" style={{ background: "var(--surface-raised)" }} />
-              <div className="h-5 w-16 rounded-full" style={{ background: "var(--surface-raised)" }} />
-              <div className="h-4 w-20 rounded" style={{ background: "var(--surface-raised)" }} />
-            </div>
-          ))}
-        </div>
+      <div className="rounded-xl overflow-hidden space-y-2">
+        <div className="h-10 w-full rounded-lg" style={{ background: "var(--surface-raised)" }} />
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className="h-12 w-full rounded-lg" style={{ background: "var(--surface-raised)" }} />
+        ))}
       </div>
 
       {/* Pagination Skeleton */}
