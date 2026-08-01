@@ -159,8 +159,75 @@ export default async function PoDetailPage({
 
         {/* Items Table & Totals */}
         <div className="md:col-span-2 space-y-6">
+          {/* Mobile Line Items Card View (< sm) */}
+          <div className="sm:hidden space-y-3">
+            <h2 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--muted-foreground)" }}>
+              Line Items ({doc.items.length})
+            </h2>
+            {doc.items.map((item, idx) => {
+              const qty = Number(item.qty);
+              const rate = Number(item.rate);
+              const lineGross = qty * rate;
+
+              return (
+                <div
+                  key={item.id}
+                  className="rounded-xl border p-4 space-y-2.5 shadow-xs"
+                  style={{
+                    background: "var(--surface)",
+                    borderColor: "var(--border)",
+                  }}
+                >
+                  {/* Header: Sl No + Part Number Pill */}
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="w-5 h-5 rounded-md flex items-center justify-center text-[11px] font-mono-nums font-bold"
+                      style={{ background: "var(--surface-raised)", color: "var(--muted-foreground)" }}
+                    >
+                      {idx + 1}
+                    </span>
+                    <span
+                      className="text-xs font-mono-nums font-semibold tracking-tight px-2 py-0.5 rounded-md"
+                      style={{
+                        background: "var(--accent-soft)",
+                        color: "var(--accent)",
+                      }}
+                    >
+                      {item.partNumber}
+                    </span>
+                  </div>
+
+                  {/* Body: Description + Qty, Rate & Total */}
+                  <div className="space-y-2 pt-1.5 border-t" style={{ borderColor: "var(--surface-raised)" }}>
+                    {item.name && (
+                      <p className="text-xs leading-relaxed" style={{ color: "var(--foreground)" }}>
+                        {item.name}
+                      </p>
+                    )}
+
+                    <div className="flex items-center justify-between pt-1">
+                      <div className="flex items-center gap-1.5 text-xs font-mono-nums">
+                        <span className="px-2 py-0.5 rounded-md" style={{ background: "var(--surface-raised)", color: "var(--muted-foreground)" }}>
+                          Qty: <strong style={{ color: "var(--foreground)" }}>{qty}</strong>
+                        </span>
+                        <span className="px-2 py-0.5 rounded-md" style={{ background: "var(--surface-raised)", color: "var(--muted-foreground)" }}>
+                          Rate: <strong style={{ color: "var(--foreground)" }}>{rate.toFixed(2)}</strong>
+                        </span>
+                      </div>
+
+                      <div className="text-right font-mono-nums text-sm font-bold" style={{ color: "var(--accent)" }}>
+                        {lineGross.toFixed(2)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Desktop Line Items Table (≥ sm) */}
           <div
-            className="rounded-xl border overflow-hidden"
+            className="hidden sm:block rounded-xl border overflow-hidden"
             style={{ borderColor: "var(--border)" }}
           >
             <table className="w-full text-sm">
