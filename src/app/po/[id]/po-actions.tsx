@@ -161,7 +161,15 @@ export default function PoActions({ documentId, status, supplierEmail, canCancel
       <ConfirmDialog
         isOpen={showSendDialog}
         title="Send Purchase Order Email"
-        description={`Are you sure you want to send this purchase order email to ${supplierEmail || "the supplier"}? The official PDF document will be attached and sent.`}
+        description={
+          <>
+            Are you sure you want to send this purchase order email to{" "}
+            <strong style={{ color: "var(--accent)" }}>
+              {supplierEmail || "the supplier"}
+            </strong>
+            ? The PDF document will be attached.
+          </>
+        }
         confirmLabel="Yes, Send Email"
         cancelLabel="Cancel"
         variant="default"

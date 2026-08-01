@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 type ConfirmDialogProps = {
   isOpen: boolean;
   title: string;
-  description: string;
+  description: React.ReactNode;
   confirmLabel?: string;
   cancelLabel?: string;
   variant?: "danger" | "warning" | "default";
@@ -116,9 +116,9 @@ export default function ConfirmDialog({
             <h3 className="text-base font-semibold tracking-tight" style={{ color: "var(--foreground)" }}>
               {title}
             </h3>
-            <p className="text-sm leading-relaxed" style={{ color: "var(--muted-foreground)" }}>
+            <div className="text-sm leading-relaxed" style={{ color: "var(--muted-foreground)" }}>
               {description}
-            </p>
+            </div>
           </div>
         </div>
 
