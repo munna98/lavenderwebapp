@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F7F6F2",
     borderBottomWidth: 1,
     borderBottomColor: "#E2E0D8",
-    paddingTop: 6.5,
+    paddingTop: 5,
     paddingBottom: 2,
     paddingHorizontal: 6,
     fontWeight: "bold",
@@ -109,21 +109,25 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     borderBottomWidth: 1,
     borderBottomColor: "#EFEFEA",
-    paddingTop: 6.5,
+    paddingTop: 4.5,
     paddingBottom: 0,
+    marginBottom: -2,
     paddingHorizontal: 6,
   },
   colSlNo: { width: "5%", textAlign: "center", color: "#666666" },
   colPartNo: { width: "20%", fontWeight: "bold" },
-  colDesc: { width: "50%", lineHeight: 1.3 },
+  colDesc: { width: "50%", lineHeight: 1.15 },
   colQty: { width: "10%", textAlign: "right" },
   colRate: { width: "15%", textAlign: "right" },
 
+  summarySectionContainer: {
+    width: "100%",
+    marginTop: 6,
+    marginBottom: 14,
+  },
   totalsContainer: {
     width: "40%",
     marginLeft: "auto",
-    marginTop: 6,
-    marginBottom: 14,
     paddingTop: 6,
     borderTopWidth: 1,
     borderTopColor: "#E2E0D8",
@@ -216,8 +220,8 @@ export default function PurchaseOrderPdf({ document: doc }: Props) {
   return (
     <Document title={`PO_${doc.number}`}>
       <Page size="A4" style={styles.page}>
-        {/* Official Header Banner */}
-        <View style={styles.headerBannerContainer}>
+        {/* Official Header Banner (Appears on every page) */}
+        <View style={styles.headerBannerContainer} fixed>
           <Image src={headerBannerPath} style={styles.headerBannerImage} />
         </View>
 
@@ -249,7 +253,7 @@ export default function PurchaseOrderPdf({ document: doc }: Props) {
 
         {/* Line Items Table */}
         <View style={styles.table}>
-          <View style={styles.tableHeader}>
+          <View style={styles.tableHeader} fixed>
             <Text style={styles.colSlNo}>#</Text>
             <Text style={styles.colPartNo}>Part #</Text>
             <Text style={styles.colDesc}>Description</Text>
@@ -273,32 +277,35 @@ export default function PurchaseOrderPdf({ document: doc }: Props) {
           })}
         </View>
 
-        {/* Totals Summary Box (Subtotal + 5% VAT) */}
-        <View style={styles.totalsContainer}>
-          <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Subtotal:</Text>
-            <Text style={styles.totalValue}>{fmt(subtotal)}</Text>
+        {/* Non-Breaking Bottom Summary Section (Totals Box + Notes) */}
+        <View style={styles.summarySectionContainer} wrap={false}>
+          {/* Totals Summary Box (Subtotal + 5% VAT) */}
+          <View style={styles.totalsContainer} wrap={false}>
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>Subtotal:</Text>
+              <Text style={styles.totalValue}>{fmt(subtotal)}</Text>
+            </View>
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>VAT (5%):</Text>
+              <Text style={styles.totalValue}>{fmt(vatAmount)}</Text>
+            </View>
+            <View style={[styles.totalRow, styles.grandTotalRow]}>
+              <Text style={styles.grandTotalLabel}>Total (incl. VAT):</Text>
+              <Text style={styles.grandTotalValue}>{fmt(grandTotal)}</Text>
+            </View>
           </View>
-          <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>VAT (5%):</Text>
-            <Text style={styles.totalValue}>{fmt(vatAmount)}</Text>
-          </View>
-          <View style={[styles.totalRow, styles.grandTotalRow]}>
-            <Text style={styles.grandTotalLabel}>Total (incl. VAT):</Text>
-            <Text style={styles.grandTotalValue}>{fmt(grandTotal)}</Text>
-          </View>
+
+          {/* Notes & Instructions */}
+          {doc.notes && (
+            <View style={styles.notesSection} wrap={false}>
+              <Text style={styles.sectionLabel}>Notes & Instructions</Text>
+              <Text style={styles.notesText}>{doc.notes}</Text>
+            </View>
+          )}
         </View>
 
-        {/* Notes */}
-        {doc.notes && (
-          <View style={styles.notesSection}>
-            <Text style={styles.sectionLabel}>Notes & Instructions</Text>
-            <Text style={styles.notesText}>{doc.notes}</Text>
-          </View>
-        )}
-
-        {/* Official Footer Banner */}
-        <View style={styles.footerBannerContainer}>
+        {/* Official Footer Banner (Appears on every page) */}
+        <View style={styles.footerBannerContainer} fixed>
           <Image src={footerBannerPath} style={styles.footerBannerImage} />
         </View>
       </Page>
