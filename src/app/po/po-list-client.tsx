@@ -128,9 +128,52 @@ export default function PoListClient({ pos, suppliers }: Props) {
         </select>
       </div>
 
-      {/* List Table */}
+      {/* Mobile Card View */}
+      <div className="sm:hidden space-y-2">
+        {filtered.length === 0 ? (
+          <div className="rounded-xl border p-8 text-center text-sm" style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}>
+            No purchase orders found matching your criteria.
+          </div>
+        ) : (
+          paginated.map((item) => (
+            <Link
+              key={item.id}
+              href={`/po/${item.id}`}
+              className="block rounded-xl border px-4 py-3.5 transition-colors hover:bg-surface-raised"
+              style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-semibold text-sm font-mono-nums" style={{ color: "var(--accent)" }}>{item.number}</span>
+                    <span
+                      className="px-2 py-0.5 rounded-full text-xs font-medium uppercase tracking-wide"
+                      style={badgeStyles[item.status]}
+                    >
+                      {item.status}
+                    </span>
+                  </div>
+                  <p className="text-sm font-medium mt-1 truncate" style={{ color: "var(--foreground)" }}>{item.supplier.name}</p>
+                  {item.customerName && (
+                    <p className="text-xs mt-0.5" style={{ color: "var(--muted-foreground)" }}>Ref: {item.customerName}</p>
+                  )}
+                  <p className="text-xs mt-1" style={{ color: "var(--muted-foreground)" }}>
+                    {new Date(item.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} · {item.createdBy.name}
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="font-semibold font-mono-nums text-sm">{item.totalFormatted}</p>
+                  <p className="text-xs mt-1" style={{ color: "var(--muted-foreground)" }}>{item.itemsCount} item{item.itemsCount !== 1 ? 's' : ''}</p>
+                </div>
+              </div>
+            </Link>
+          ))
+        )}
+      </div>
+
+      {/* Desktop Table View */}
       <div
-        className="rounded-xl border overflow-hidden"
+        className="hidden sm:block rounded-xl border overflow-hidden"
         style={{ borderColor: "var(--border)" }}
       >
         <table className="w-full text-sm">

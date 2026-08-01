@@ -185,9 +185,65 @@ export default function UsersTable({ users: initialUsers }: Props) {
         </form>
       )}
 
-      {/* Users table */}
+      {/* Mobile Card View */}
+      <div className="sm:hidden space-y-2">
+        {paginated.length === 0 ? (
+          <div className="rounded-xl border p-8 text-center text-sm" style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}>
+            No users yet. Add a user to get started.
+          </div>
+        ) : (
+          paginated.map((user) => (
+            <div
+              key={user.id}
+              className="rounded-xl border px-4 py-3.5"
+              style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm truncate" style={{ color: "var(--foreground)" }}>{user.name}</p>
+                  <p className="text-xs mt-0.5 truncate font-mono-nums" style={{ color: "var(--muted-foreground)" }}>{user.email}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span
+                      className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                      style={
+                        user.isActive
+                          ? { background: "var(--status-sent-bg)", color: "var(--status-sent-text)" }
+                          : { background: "var(--status-cancelled-bg)", color: "var(--status-cancelled-text)" }
+                      }
+                    >
+                      {user.isActive ? "Active" : "Inactive"}
+                    </span>
+                  </div>
+                </div>
+                <div className="shrink-0 flex flex-col items-end gap-2">
+                  <select
+                    value={user.role}
+                    onChange={(e) => handleRoleChange(user.id, e.target.value as "ADMIN" | "STAFF")}
+                    disabled={isPending}
+                    className="text-xs px-2 py-1 rounded-md border cursor-pointer"
+                    style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
+                  >
+                    <option value="STAFF">Staff</option>
+                    <option value="ADMIN">Admin</option>
+                  </select>
+                  <button
+                    onClick={() => handleToggleActive(user.id, user.isActive)}
+                    disabled={isPending}
+                    className="text-xs underline underline-offset-2 cursor-pointer disabled:opacity-40"
+                    style={{ color: "var(--muted-foreground)" }}
+                  >
+                    {user.isActive ? "Deactivate" : "Reactivate"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop Table View */}
       <div
-        className="rounded-xl border overflow-hidden"
+        className="hidden sm:block rounded-xl border overflow-hidden"
         style={{ borderColor: "var(--border)" }}
       >
         <table className="w-full text-sm">

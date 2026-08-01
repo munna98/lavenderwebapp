@@ -64,9 +64,45 @@ export default function SuppliersClient({ suppliers, isAdmin }: Props) {
         />
       </div>
 
-      {/* Table */}
+      {/* Mobile Card View */}
+      <div className="sm:hidden space-y-2">
+        {filtered.length === 0 ? (
+          <div className="rounded-xl border p-8 text-center text-sm" style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}>
+            No suppliers match &ldquo;{search}&rdquo;
+          </div>
+        ) : (
+          paginated.map((supplier) => (
+            <Link
+              key={supplier.id}
+              href={`/suppliers/${supplier.id}`}
+              className="block rounded-xl border px-4 py-3.5 transition-colors hover:bg-surface-raised"
+              style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm truncate" style={{ color: "var(--accent)" }}>{supplier.name}</p>
+                  {supplier.email && (
+                    <p className="text-xs mt-0.5 truncate font-mono-nums" style={{ color: "var(--muted-foreground)" }}>{supplier.email}</p>
+                  )}
+                  {supplier.phone && (
+                    <p className="text-xs mt-0.5" style={{ color: "var(--muted-foreground)" }}>{supplier.phone}</p>
+                  )}
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-xs font-medium" style={{ color: "var(--muted-foreground)" }}>{supplier._count.documents} PO{supplier._count.documents !== 1 ? 's' : ''}</p>
+                  {supplier.taxId && (
+                    <p className="text-xs font-mono-nums mt-0.5" style={{ color: "var(--muted-foreground)" }}>{supplier.taxId}</p>
+                  )}
+                </div>
+              </div>
+            </Link>
+          ))
+        )}
+      </div>
+
+      {/* Desktop Table View */}
       <div
-        className="rounded-xl border overflow-hidden"
+        className="hidden sm:block rounded-xl border overflow-hidden"
         style={{ borderColor: "var(--border)" }}
       >
         <table className="w-full text-sm">

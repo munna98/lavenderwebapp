@@ -45,8 +45,39 @@ export default function SupplierPoTable({ documents }: Props) {
 
   return (
     <div className="space-y-3">
+      {/* Mobile Card View */}
+      <div className="sm:hidden space-y-2">
+        {paginated.map((doc) => (
+          <Link
+            key={doc.id}
+            href={`/po/${doc.id}`}
+            className="block rounded-xl border px-4 py-3.5 transition-colors hover:bg-surface-raised"
+            style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-semibold text-sm font-mono-nums" style={{ color: "var(--accent)" }}>{doc.number}</span>
+                  <span
+                    className="px-2 py-0.5 rounded-full text-xs font-medium uppercase"
+                    style={badgeStyles[doc.status]}
+                  >
+                    {doc.status}
+                  </span>
+                </div>
+                <p className="text-xs mt-1" style={{ color: "var(--muted-foreground)" }}>
+                  {doc.createdBy.name} · {new Date(doc.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+                </p>
+              </div>
+              <p className="font-semibold font-mono-nums text-sm shrink-0">{doc.totalFormatted}</p>
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      {/* Desktop Table View */}
       <div
-        className="rounded-xl border overflow-hidden"
+        className="hidden sm:block rounded-xl border overflow-hidden"
         style={{ borderColor: "var(--border)" }}
       >
         <table className="w-full text-sm">
