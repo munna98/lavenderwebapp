@@ -8,6 +8,7 @@ import { CreateDocumentSchema, type CreateDocumentInput } from "@/lib/schemas/do
 import type { Supplier } from "@prisma/client";
 import SummaryRail from "./summary-rail";
 import SupplierCombobox from "./supplier-combobox";
+import ItemDrawer, { type DrawerItem } from "@/components/ui/item-drawer";
 
 type Props = {
   suppliers: Supplier[];
@@ -46,6 +47,11 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
 
+  // Mobile drawer state
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerItem, setDrawerItem] = useState<DrawerItem | null>(null);
+  const [drawerIndex, setDrawerIndex] = useState<number | null>(null);
+
   const isEditing = Boolean(initialData?.documentId);
 
   const rowInputRefs = useRef<
@@ -72,7 +78,7 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, update } = useFieldArray({
     control: form.control,
     name: "items",
   });
@@ -86,22 +92,51 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
 
   const totals = computeDisplayTotals(items);
 
+  // ── Mobile Drawer handlers ─────────────────────────────
+  function openDrawerForNew() {
+    setDrawerItem(null);
+    setDrawerIndex(null);
+    setDrawerOpen(true);
+  }
+
+  function openDrawerForEdit(idx: number) {
+    const item = items[idx];
+    setDrawerItem({
+      partNumber: item.partNumber,
+      name: item.name || "",
+      qty: Number(item.qty),
+      rate: Number(item.rate),
+    });
+    setDrawerIndex(idx);
+    setDrawerOpen(true);
+  }
+
+  function handleDrawerSave(saved: DrawerItem, index: number | null) {
+    const payload = { ...DEFAULT_ITEM, ...saved };
+    if (index === null) {
+      // If the first item is an untouched dummy, update it instead of appending a second item
+      if (fields.length === 1 && !items[0]?.partNumber && !items[0]?.name && Number(items[0]?.rate) === 0) {
+        update(0, payload);
+      } else {
+        append(payload);
+      }
+    } else {
+      update(index, { ...items[index], ...payload });
+    }
+    setDrawerOpen(false);
+  }
+
+  // ── Desktop table keyboard handlers ───────────────────
   function setInputRef(index: number, field: "partNumber" | "name" | "qty" | "rate", el: HTMLInputElement | null) {
-    if (!rowInputRefs.current[index]) {
-      rowInputRefs.current[index] = {};
-    }
-    if (el) {
-      rowInputRefs.current[index][field] = el;
-    }
+    if (!rowInputRefs.current[index]) rowInputRefs.current[index] = {};
+    if (el) rowInputRefs.current[index][field] = el;
   }
 
   function focusInput(index: number, field: "partNumber" | "name" | "qty" | "rate") {
     const el = rowInputRefs.current[index]?.[field];
     if (el) {
       el.focus();
-      if (field === "qty" || field === "rate") {
-        el.select();
-      }
+      if (field === "qty" || field === "rate") el.select();
     }
   }
 
@@ -112,41 +147,27 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
   }
 
   function handlePartNumberKeyDown(e: React.KeyboardEvent<HTMLInputElement>, idx: number) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      focusInput(idx, "name");
-    }
+    if (e.key === "Enter") { e.preventDefault(); focusInput(idx, "name"); }
   }
 
   function handleNameKeyDown(e: React.KeyboardEvent<HTMLInputElement>, idx: number) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      focusInput(idx, "qty");
-    }
+    if (e.key === "Enter") { e.preventDefault(); focusInput(idx, "qty"); }
   }
 
   function handleQtyKeyDown(e: React.KeyboardEvent<HTMLInputElement>, idx: number) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      focusInput(idx, "rate");
-    }
+    if (e.key === "Enter") { e.preventDefault(); focusInput(idx, "rate"); }
   }
 
   function handleRateKeyDown(e: React.KeyboardEvent<HTMLInputElement>, idx: number) {
     if (e.key === "Enter") {
       e.preventDefault();
       const currentPartNo = form.getValues(`items.${idx}.partNumber`);
-
       if (currentPartNo && currentPartNo.trim().length > 0) {
         append({ partNumber: "", name: "", qty: 1, rate: 0, taxPercent: 0 });
         setTimeout(() => focusInput(idx + 1, "partNumber"), 50);
       } else {
-        if (fields.length > 1) {
-          remove(idx);
-        }
-        setTimeout(() => {
-          form.handleSubmit(handleSubmit)();
-        }, 50);
+        if (fields.length > 1) remove(idx);
+        setTimeout(() => form.handleSubmit(handleSubmit)(), 50);
       }
     }
   }
@@ -160,12 +181,16 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
       } else {
         result = await createDocument(data);
       }
-
-      if (!result.success) {
-        setServerError(result.error);
-      }
+      if (!result.success) setServerError(result.error);
     });
   }
+
+  // Check if first item is untouched dummy
+  const isFirstItemUntouched =
+    fields.length === 1 &&
+    !items[0]?.partNumber &&
+    !items[0]?.name &&
+    Number(items[0]?.rate) === 0;
 
   return (
     <form onSubmit={form.handleSubmit(handleSubmit)}>
@@ -199,9 +224,7 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
                       field.onChange(selectedId);
                       const selectedSup = suppliers.find((s) => s.id === selectedId);
                       const emails = getSupplierEmails(selectedSup);
-                      if (emails.length > 0) {
-                        form.setValue("supplierEmail", emails[0]);
-                      }
+                      if (emails.length > 0) form.setValue("supplierEmail", emails[0]);
                     }}
                     onEnterNext={() => focusInput(0, "partNumber")}
                   />
@@ -224,11 +247,7 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
                     value={availableEmails.includes(currentSupplierEmail || "") ? currentSupplierEmail || "" : availableEmails[0]}
                     onChange={(e) => form.setValue("supplierEmail", e.target.value)}
                     className="w-full px-3 py-2.5 pr-9 rounded-lg border text-sm outline-none cursor-pointer transition-all appearance-none font-mono-nums focus:border-accent"
-                    style={{
-                      borderColor: "var(--border)",
-                      background: "var(--surface)",
-                      color: "var(--foreground)",
-                    }}
+                    style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
                   >
                     {availableEmails.map((email, idx) => (
                       <option key={email} value={email}>
@@ -236,18 +255,7 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
                       </option>
                     ))}
                   </select>
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
-                    style={{ color: "var(--muted-foreground)" }}
-                  >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--muted-foreground)" }}>
                     <polyline points="6 9 12 15 18 9" />
                   </svg>
                 </div>
@@ -269,10 +277,11 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
               <label className="text-sm font-medium">
                 Line items <span style={{ color: "var(--brass)" }}>*</span>
               </label>
+              {/* Desktop add row button */}
               <button
                 type="button"
                 onClick={addRow}
-                className="inline-flex items-center gap-1 text-xs font-medium cursor-pointer transition-colors hover:underline"
+                className="hidden sm:inline-flex items-center gap-1 text-xs font-medium cursor-pointer transition-colors hover:underline"
                 style={{ color: "var(--accent)" }}
               >
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -283,11 +292,159 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
               </button>
             </div>
 
-            {/* Table */}
-            <div
-              className="rounded-xl border overflow-x-auto"
-              style={{ borderColor: "var(--border)" }}
-            >
+            {/* ── Mobile Card List ──────────────────────── */}
+            <div className="sm:hidden space-y-3">
+              {isFirstItemUntouched ? (
+                /* Clean Empty State CTA on Mobile when no items added yet */
+                <div
+                  onClick={openDrawerForNew}
+                  className="rounded-xl border p-6 text-center cursor-pointer transition-all hover:bg-surface-raised space-y-2.5"
+                  style={{
+                    borderColor: "var(--border-strong)",
+                    borderStyle: "dashed",
+                    background: "var(--surface)",
+                  }}
+                >
+                  <div className="w-10 h-10 rounded-full mx-auto flex items-center justify-center" style={{ background: "var(--accent-soft)", color: "var(--accent)" }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="12" y1="5" x2="12" y2="19" />
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>Add First Line Item</p>
+                    <p className="text-xs mt-0.5" style={{ color: "var(--muted-foreground)" }}>Tap to enter part number, description, quantity & rate</p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {fields.map((field, idx) => {
+                    const item = items[idx] ?? DEFAULT_ITEM;
+                    const lineGross = (Number(item.qty) || 0) * (Number(item.rate) || 0);
+
+                    return (
+                      <div
+                        key={field.id}
+                        className="relative rounded-xl border p-4 transition-all space-y-2.5 shadow-xs hover:shadow-md"
+                        style={{
+                          background: "var(--surface)",
+                          borderColor: "var(--border)",
+                        }}
+                      >
+                        {/* Header: Sl No + Part Number Pill + Action Buttons */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className="w-5 h-5 rounded-md flex items-center justify-center text-[11px] font-mono-nums font-bold"
+                              style={{ background: "var(--surface-raised)", color: "var(--muted-foreground)" }}
+                            >
+                              {idx + 1}
+                            </span>
+                            <span
+                              className="text-xs font-mono-nums font-semibold tracking-tight px-2 py-0.5 rounded-md"
+                              style={{
+                                background: item.partNumber ? "var(--accent-soft)" : "var(--surface-raised)",
+                                color: item.partNumber ? "var(--accent)" : "var(--muted-foreground)",
+                              }}
+                            >
+                              {item.partNumber || "No Part #"}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-1.5">
+                            {/* Edit Button */}
+                            <button
+                              type="button"
+                              onClick={() => openDrawerForEdit(idx)}
+                              className="p-1.5 rounded-md text-xs font-medium cursor-pointer transition-colors"
+                              style={{ color: "var(--accent)", background: "var(--accent-soft)" }}
+                              title="Edit Item"
+                            >
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                              </svg>
+                            </button>
+
+                            {/* Delete Button */}
+                            {fields.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => remove(idx)}
+                                className="p-1.5 rounded-md text-xs cursor-pointer transition-colors"
+                                style={{ color: "var(--muted-foreground)", background: "var(--surface-raised)" }}
+                                title="Remove Item"
+                              >
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <line x1="18" y1="6" x2="6" y2="18" />
+                                  <line x1="6" y1="6" x2="18" y2="18" />
+                                </svg>
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Body: Description & Quantities (Tappable) */}
+                        <div
+                          onClick={() => openDrawerForEdit(idx)}
+                          className="cursor-pointer space-y-2 pt-1.5 border-t"
+                          style={{ borderColor: "var(--surface-raised)" }}
+                        >
+                          {/* Description */}
+                          <p
+                            className="text-xs leading-relaxed"
+                            style={{
+                              color: item.name ? "var(--foreground)" : "var(--muted-foreground-soft)",
+                              fontStyle: item.name ? "normal" : "italic",
+                            }}
+                          >
+                            {item.name || "Tap to add description…"}
+                          </p>
+
+                          {/* Qty, Rate & Line Total */}
+                          <div className="flex items-center justify-between pt-1">
+                            <div className="flex items-center gap-1.5 text-xs font-mono-nums">
+                              <span className="px-2 py-0.5 rounded-md" style={{ background: "var(--surface-raised)", color: "var(--muted-foreground)" }}>
+                                Qty: <strong style={{ color: "var(--foreground)" }}>{Number(item.qty) || 1}</strong>
+                              </span>
+                              <span className="px-2 py-0.5 rounded-md" style={{ background: "var(--surface-raised)", color: "var(--muted-foreground)" }}>
+                                Rate: <strong style={{ color: "var(--foreground)" }}>{Number(item.rate) ? formatAmount(Number(item.rate)) : "0.00"}</strong>
+                              </span>
+                            </div>
+
+                            <div className="text-right font-mono-nums text-sm font-bold" style={{ color: "var(--accent)" }}>
+                              {formatAmount(lineGross)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {/* Mobile Add Item Button */}
+                  <button
+                    type="button"
+                    onClick={openDrawerForNew}
+                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-semibold transition-all cursor-pointer hover:bg-surface-raised active:scale-[0.99]"
+                    style={{
+                      borderColor: "var(--border-strong)",
+                      borderStyle: "dashed",
+                      color: "var(--accent)",
+                      background: "var(--surface)",
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="12" y1="5" x2="12" y2="19" />
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    Add Line Item
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* ── Desktop Table ─────────────────────────── */}
+            <div className="hidden sm:block rounded-xl border overflow-x-auto" style={{ borderColor: "var(--border)" }}>
               <table className="w-full text-sm min-w-[640px]">
                 <thead>
                   <tr style={{ background: "var(--surface-raised)", borderBottom: "1px solid var(--border)" }}>
@@ -311,35 +468,19 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
                     const { ref: rateRegRef, ...rateProps } = form.register(`items.${idx}.rate`, { valueAsNumber: true });
 
                     return (
-                      <tr
-                        key={field.id}
-                        style={{ borderTop: idx > 0 ? "1px solid var(--border)" : undefined }}
-                      >
-                        {/* Sl No. */}
+                      <tr key={field.id} style={{ borderTop: idx > 0 ? "1px solid var(--border)" : undefined }}>
                         <td className="px-2 py-2 text-center text-xs font-mono-nums font-semibold" style={{ color: "var(--muted-foreground)" }}>
                           {idx + 1}
                         </td>
-
-                        {/* Part # */}
                         <td className="px-3 py-2">
                           <input
                             {...partNoProps}
-                            onChange={(e) => {
-                              e.target.value = e.target.value.replace(/\s+/g, "");
-                              partNoRegOnChange(e);
-                            }}
-                            ref={(e) => {
-                              partNoRegRef(e);
-                              setInputRef(idx, "partNumber", e);
-                            }}
+                            onChange={(e) => { e.target.value = e.target.value.replace(/\s+/g, ""); partNoRegOnChange(e); }}
+                            ref={(e) => { partNoRegRef(e); setInputRef(idx, "partNumber", e); }}
                             onKeyDown={(e) => handlePartNumberKeyDown(e, idx)}
                             placeholder="Part number"
                             className="w-full px-2.5 py-1.5 rounded-md border text-sm font-mono-nums outline-none transition-all focus:border-accent"
-                            style={{
-                              borderColor: form.formState.errors.items?.[idx]?.partNumber ? "#EF4444" : "var(--border)",
-                              background: "var(--surface)",
-                              color: "var(--foreground)",
-                            }}
+                            style={{ borderColor: form.formState.errors.items?.[idx]?.partNumber ? "#EF4444" : "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
                           />
                           {form.formState.errors.items?.[idx]?.partNumber && (
                             <p className="text-[11px] mt-0.5 font-medium" style={{ color: "#EF4444" }}>
@@ -347,66 +488,39 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
                             </p>
                           )}
                         </td>
-
-                        {/* Description */}
                         <td className="px-3 py-2">
                           <input
                             {...nameProps}
-                            ref={(e) => {
-                              nameRegRef(e);
-                              setInputRef(idx, "name", e);
-                            }}
+                            ref={(e) => { nameRegRef(e); setInputRef(idx, "name", e); }}
                             onKeyDown={(e) => handleNameKeyDown(e, idx)}
                             placeholder="Description"
                             className="w-full px-2.5 py-1.5 rounded-md border text-sm outline-none transition-all focus:border-accent"
-                            style={{
-                              borderColor: "var(--border)",
-                              background: "var(--surface)",
-                              color: "var(--foreground)",
-                            }}
+                            style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
                           />
                         </td>
-
-                        {/* Qty */}
                         <td className="px-3 py-2">
                           <input
                             {...qtyProps}
-                            ref={(e) => {
-                              qtyRegRef(e);
-                              setInputRef(idx, "qty", e);
-                            }}
-                            type="number"
-                            step="any"
-                            min="0.0001"
+                            ref={(e) => { qtyRegRef(e); setInputRef(idx, "qty", e); }}
+                            type="number" step="any" min="0.0001"
                             onKeyDown={(e) => handleQtyKeyDown(e, idx)}
                             className="w-full px-2.5 py-1.5 rounded-md border text-sm text-right outline-none font-mono-nums focus:border-accent"
                             style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
                           />
                         </td>
-
-                        {/* Rate */}
                         <td className="px-3 py-2">
                           <input
                             {...rateProps}
-                            ref={(e) => {
-                              rateRegRef(e);
-                              setInputRef(idx, "rate", e);
-                            }}
-                            type="number"
-                            step="any"
-                            min="0"
+                            ref={(e) => { rateRegRef(e); setInputRef(idx, "rate", e); }}
+                            type="number" step="any" min="0"
                             onKeyDown={(e) => handleRateKeyDown(e, idx)}
                             className="w-full px-2.5 py-1.5 rounded-md border text-sm text-right outline-none font-mono-nums focus:border-accent"
                             style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
                           />
                         </td>
-
-                        {/* Line total */}
                         <td className="px-3 py-2 text-right font-mono-nums text-sm font-semibold" style={{ color: "var(--foreground)" }}>
                           {formatAmount(lineGross)}
                         </td>
-
-                        {/* Remove */}
                         <td className="px-2.5 py-2 text-center">
                           {fields.length > 1 && (
                             <button
@@ -451,6 +565,15 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
           register={form.register}
         />
       </div>
+
+      {/* ── Mobile Item Drawer ────────────────────────── */}
+      <ItemDrawer
+        isOpen={drawerOpen}
+        item={drawerItem}
+        itemIndex={drawerIndex}
+        onSave={handleDrawerSave}
+        onClose={() => setDrawerOpen(false)}
+      />
     </form>
   );
 }
@@ -458,8 +581,7 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
 function computeDisplayTotals(items: CreateDocumentInput["items"]) {
   let subtotal = 0;
   for (const item of items) {
-    const lineSubtotal = (Number(item.qty) || 0) * (Number(item.rate) || 0);
-    subtotal += lineSubtotal;
+    subtotal += (Number(item.qty) || 0) * (Number(item.rate) || 0);
   }
   const totalTax = subtotal * 0.05;
   const total = subtotal + totalTax;
@@ -467,8 +589,5 @@ function computeDisplayTotals(items: CreateDocumentInput["items"]) {
 }
 
 function formatAmount(amount: number) {
-  return amount.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  return amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
