@@ -12,12 +12,13 @@ export type DrawerItem = {
 type Props = {
   isOpen: boolean;
   item: DrawerItem | null;
-  itemIndex: number | null; // null = new item
+  itemIndex: number; // 0-indexed item number (e.g. 0 for #1, 1 for #2)
+  isNew?: boolean;   // true when adding a new item, false when editing
   onSave: (item: DrawerItem, index: number | null) => void;
   onClose: () => void;
 };
 
-export default function ItemDrawer({ isOpen, item, itemIndex, onSave, onClose }: Props) {
+export default function ItemDrawer({ isOpen, item, itemIndex, isNew = false, onSave, onClose }: Props) {
   const [partNumber, setPartNumber] = useState("");
   const [name, setName] = useState("");
   const [qty, setQty] = useState("1");
@@ -75,12 +76,11 @@ export default function ItemDrawer({ isOpen, item, itemIndex, onSave, onClose }:
         qty: parsedQty,
         rate: isNaN(parsedRate) ? 0 : parsedRate,
       },
-      itemIndex
+      isNew ? null : itemIndex
     );
   }
 
   const lineTotal = (parseFloat(qty) || 0) * (parseFloat(rate) || 0);
-  const isNew = itemIndex === null;
 
   return (
     <>
@@ -115,7 +115,7 @@ export default function ItemDrawer({ isOpen, item, itemIndex, onSave, onClose }:
               className="px-2 py-0.5 rounded-md text-xs font-mono-nums font-semibold"
               style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
             >
-              {isNew ? "New" : `#${(itemIndex ?? 0) + 1}`}
+              #{itemIndex + 1}
             </span>
             <h2 className="text-base font-bold tracking-tight" style={{ color: "var(--foreground)" }}>
               {isNew ? "Add Line Item" : "Edit Line Item"}

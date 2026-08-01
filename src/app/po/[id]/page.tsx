@@ -195,12 +195,12 @@ export default async function PoDetailPage({
                     </p>
                   )}
 
-                  {/* Qty, Rate & Total */}
-                  <div className="flex items-center justify-between pt-1.5 text-xs font-mono-nums border-t" style={{ borderColor: "var(--border)" }}>
-                    <span style={{ color: "var(--muted-foreground)" }}>
-                      {qty} × {rate.toFixed(2)}
+                  {/* Qty, Rate & Total (Enhanced Visibility) */}
+                  <div className="flex items-center justify-between pt-2 text-sm font-mono-nums border-t" style={{ borderColor: "var(--border)" }}>
+                    <span className="font-medium" style={{ color: "var(--foreground)" }}>
+                      {qty} <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>×</span> {rate.toFixed(2)}
                     </span>
-                    <span className="font-semibold text-sm" style={{ color: "var(--foreground)" }}>
+                    <span className="font-bold text-base" style={{ color: "var(--accent)" }}>
                       {lineGross.toFixed(2)}
                     </span>
                   </div>

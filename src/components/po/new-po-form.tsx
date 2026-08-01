@@ -50,7 +50,8 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
   // Mobile drawer state
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerItem, setDrawerItem] = useState<DrawerItem | null>(null);
-  const [drawerIndex, setDrawerIndex] = useState<number | null>(null);
+  const [drawerIndex, setDrawerIndex] = useState<number>(0);
+  const [drawerIsNew, setDrawerIsNew] = useState<boolean>(false);
 
   const isEditing = Boolean(initialData?.documentId);
 
@@ -92,10 +93,19 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
 
   const totals = computeDisplayTotals(items);
 
+  // Check if first item is untouched dummy
+  const isFirstItemUntouched =
+    fields.length === 1 &&
+    !items[0]?.partNumber &&
+    !items[0]?.name &&
+    Number(items[0]?.rate) === 0;
+
   // ── Mobile Drawer handlers ─────────────────────────────
   function openDrawerForNew() {
     setDrawerItem(null);
-    setDrawerIndex(null);
+    const nextIdx = isFirstItemUntouched ? 0 : fields.length;
+    setDrawerIndex(nextIdx);
+    setDrawerIsNew(true);
     setDrawerOpen(true);
   }
 
@@ -108,6 +118,7 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
       rate: Number(item.rate),
     });
     setDrawerIndex(idx);
+    setDrawerIsNew(false);
     setDrawerOpen(true);
   }
 
@@ -184,13 +195,6 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
       if (!result.success) setServerError(result.error);
     });
   }
-
-  // Check if first item is untouched dummy
-  const isFirstItemUntouched =
-    fields.length === 1 &&
-    !items[0]?.partNumber &&
-    !items[0]?.name &&
-    Number(items[0]?.rate) === 0;
 
   return (
     <form onSubmit={form.handleSubmit(handleSubmit)}>
@@ -344,20 +348,28 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
                           </div>
 
                           <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+                            {/* Pencil Edit Icon */}
                             <button
                               type="button"
                               onClick={() => openDrawerForEdit(idx)}
-                              className="text-xs font-medium cursor-pointer"
+                              className="p-1 cursor-pointer transition-opacity hover:opacity-75"
                               style={{ color: "var(--accent)" }}
+                              title="Edit Item"
                             >
-                              Edit
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                              </svg>
                             </button>
+
+                            {/* Delete Icon */}
                             {fields.length > 1 && (
                               <button
                                 type="button"
                                 onClick={() => remove(idx)}
-                                className="text-xs cursor-pointer px-1"
+                                className="p-1 text-xs cursor-pointer transition-opacity hover:opacity-75"
                                 style={{ color: "var(--muted-foreground)" }}
+                                title="Remove Item"
                               >
                                 ✕
                               </button>
@@ -372,12 +384,12 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
                           </p>
                         )}
 
-                        {/* Qty, Rate & Line Total */}
-                        <div className="flex items-center justify-between pt-1.5 text-xs font-mono-nums border-t" style={{ borderColor: "var(--border)" }}>
-                          <span style={{ color: "var(--muted-foreground)" }}>
-                            {Number(item.qty) || 1} × {Number(item.rate) ? formatAmount(Number(item.rate)) : "0.00"}
+                        {/* Qty, Rate & Line Total (Enhanced Visibility) */}
+                        <div className="flex items-center justify-between pt-2 text-sm font-mono-nums border-t" style={{ borderColor: "var(--border)" }}>
+                          <span className="font-medium" style={{ color: "var(--foreground)" }}>
+                            {Number(item.qty) || 1} <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>×</span> {Number(item.rate) ? formatAmount(Number(item.rate)) : "0.00"}
                           </span>
-                          <span className="font-semibold text-sm" style={{ color: "var(--foreground)" }}>
+                          <span className="font-bold text-base" style={{ color: "var(--accent)" }}>
                             {formatAmount(lineGross)}
                           </span>
                         </div>
@@ -535,6 +547,7 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
         isOpen={drawerOpen}
         item={drawerItem}
         itemIndex={drawerIndex}
+        isNew={drawerIsNew}
         onSave={handleDrawerSave}
         onClose={() => setDrawerOpen(false)}
       />
