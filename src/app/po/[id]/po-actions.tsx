@@ -76,18 +76,19 @@ export default function PoActions({ documentId, status, supplierEmail, canCancel
       )}
 
       {/* Action Buttons */}
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-2">
         {status === "DRAFT" && canEdit && (
           <Link
             href={`/po/${documentId}/edit`}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer border hover:bg-surface-raised transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer border hover:bg-surface-raised transition-colors"
             style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
             </svg>
-            <span>Edit Draft</span>
+            <span className="sm:hidden">Edit</span>
+            <span className="hidden sm:inline">Edit Draft</span>
           </Link>
         )}
 
@@ -95,7 +96,7 @@ export default function PoActions({ documentId, status, supplierEmail, canCancel
         <a
           href={`/api/po/${documentId}/pdf`}
           download
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer border hover:bg-surface-raised transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer border hover:bg-surface-raised transition-colors"
           style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -103,7 +104,8 @@ export default function PoActions({ documentId, status, supplierEmail, canCancel
             <polyline points="7 10 12 15 17 10" />
             <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
-          <span>Download PDF</span>
+          <span className="sm:hidden">PDF</span>
+          <span className="hidden sm:inline">Download PDF</span>
         </a>
 
         {/* Send via Email button */}
@@ -112,7 +114,7 @@ export default function PoActions({ documentId, status, supplierEmail, canCancel
             id="send-po-btn"
             onClick={handleSendClick}
             disabled={isPending || !supplierEmail}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer transition-colors border-0 disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer transition-colors border-0 disabled:opacity-50"
             style={{
               background: "var(--accent)",
               color: "#fff",
@@ -122,7 +124,8 @@ export default function PoActions({ documentId, status, supplierEmail, canCancel
               <line x1="22" y1="2" x2="11" y2="13" />
               <polygon points="22 2 15 22 11 13 2 9 22 2" />
             </svg>
-            <span>{isPending ? "Sending..." : "Send via Email"}</span>
+            <span className="sm:hidden">{isPending ? "Sending…" : "Send"}</span>
+            <span className="hidden sm:inline">{isPending ? "Sending…" : "Send via Email"}</span>
           </button>
         )}
 
@@ -132,7 +135,7 @@ export default function PoActions({ documentId, status, supplierEmail, canCancel
             id="cancel-po-btn"
             onClick={() => setShowCancelDialog(true)}
             disabled={isPending}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer border disabled:opacity-50 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer border disabled:opacity-50 transition-colors"
             style={{ borderColor: "#FCA5A5", color: "#B91C1C", background: "#FEF2F2" }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -146,14 +149,15 @@ export default function PoActions({ documentId, status, supplierEmail, canCancel
 
         <a
           href="/po"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm border cursor-pointer hover:bg-surface-raised transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg text-sm border cursor-pointer hover:bg-surface-raised transition-colors"
           style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="19" y1="12" x2="5" y2="12" />
             <polyline points="12 19 5 12 12 5" />
           </svg>
-          <span>Back to List</span>
+          <span className="sm:hidden">Back</span>
+          <span className="hidden sm:inline">Back to List</span>
         </a>
       </div>
 
