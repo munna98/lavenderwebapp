@@ -59,7 +59,7 @@ export default function NewUserPage() {
               name="name"
               required
               autoFocus
-              placeholder="e.g. Ravi Kumar"
+              placeholder="e.g. Munavir T"
               className="w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-all focus:border-accent"
               style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
             />
@@ -121,9 +121,6 @@ export default function NewUserPage() {
                 )}
               </button>
             </div>
-            <p className="text-xs mt-1.5" style={{ color: "var(--muted-foreground)" }}>
-              The user can change this after their first login.
-            </p>
           </div>
 
           {/* Role */}
