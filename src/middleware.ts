@@ -39,16 +39,15 @@ export async function middleware(request: NextRequest) {
   if (!user && !isPublic) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/login";
-    loginUrl.searchParams.set("next", pathname);
-    return NextResponse.redirect(loginUrl);
-  }
-
-  // Authenticated + trying to access /login → redirect to home
-  if (user && pathname.startsWith("/login")) {
-    const homeUrl = request.nextUrl.clone();
-    homeUrl.pathname = "/";
-    homeUrl.search = "";
-    return NextResponse.redirect(homeUrl);
+    if (pathname !== "/") {
+      loginUrl.searchParams.set("next", pathname);
+    }
+    const redirectRes = NextResponse.redirect(loginUrl);
+    // Copy cookies to redirect response to prevent losing session state
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      redirectRes.cookies.set(cookie.name, cookie.value, cookie);
+    });
+    return redirectRes;
   }
 
   return supabaseResponse;

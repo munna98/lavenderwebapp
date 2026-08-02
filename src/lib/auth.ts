@@ -25,7 +25,11 @@ export const getCurrentUser = cache(async (): Promise<AuthUser | null> => {
       where: { id: authUser.id },
     });
 
-    if (!user || !user.isActive) return null;
+    if (!user || !user.isActive) {
+      // Clear orphaned or deactivated Supabase session
+      await supabase.auth.signOut();
+      return null;
+    }
 
     return {
       session: authUser,
