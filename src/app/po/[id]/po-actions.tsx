@@ -3,6 +3,7 @@
 import { useTransition, useState } from "react";
 import { sendDocument, cancelDocument } from "@/lib/actions/documents";
 import Link from "next/link";
+import { toast } from "sonner";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
 
 type Props = {
@@ -15,66 +16,43 @@ type Props = {
 
 export default function PoActions({ documentId, status, supplierEmail, canCancel, canEdit = true }: Props) {
   const [isPending, startTransition] = useTransition();
-  const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showSendDialog, setShowSendDialog] = useState(false);
 
   function handleSendClick() {
     if (!supplierEmail) {
-      setFeedback({ type: "error", message: "Supplier email address is missing." });
+      toast.error("Supplier email address is missing.");
       return;
     }
     setShowSendDialog(true);
   }
 
   function handleSendConfirm() {
-    setFeedback(null);
     startTransition(async () => {
       const res = await sendDocument(documentId);
       setShowSendDialog(false);
       if (res.success) {
-        setFeedback({ type: "success", message: "Purchase order sent successfully via email!" });
+        toast.success("Purchase Order email sent to supplier!");
       } else {
-        setFeedback({ type: "error", message: res.error });
+        toast.error(res.error ?? "Failed to send Purchase Order email.");
       }
     });
   }
 
   function handleCancelConfirm() {
-    setFeedback(null);
     startTransition(async () => {
       const res = await cancelDocument(documentId);
       setShowCancelDialog(false);
       if (res.success) {
-        setFeedback({ type: "success", message: "Purchase order has been cancelled." });
+        toast.success("Purchase Order has been cancelled.");
       } else {
-        setFeedback({ type: "error", message: res.error });
+        toast.error(res.error ?? "Failed to cancel Purchase Order.");
       }
     });
   }
 
   return (
     <div className="space-y-4">
-      {/* Feedback banner */}
-      {feedback && (
-        <div
-          className="px-4 py-3 rounded-lg text-sm border flex items-center justify-between"
-          style={{
-            background: feedback.type === "success" ? "var(--accent-soft)" : "#FEF2F2",
-            borderColor: feedback.type === "success" ? "var(--accent)" : "#FCA5A5",
-            color: feedback.type === "success" ? "var(--accent)" : "#B91C1C",
-          }}
-        >
-          <span>{feedback.message}</span>
-          <button
-            onClick={() => setFeedback(null)}
-            className="ml-3 opacity-60 hover:opacity-100 cursor-pointer"
-          >
-            ✕
-          </button>
-        </div>
-      )}
-
       {/* Action Buttons */}
       <div className="flex flex-wrap items-center gap-2">
         {status === "DRAFT" && canEdit && (

@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createUser } from "@/lib/actions/users";
 import Link from "next/link";
+import { toast } from "sonner";
 
 export default function NewUserPage() {
   const router = useRouter();
@@ -18,10 +19,12 @@ export default function NewUserPage() {
     startTransition(async () => {
       const result = await createUser(formData);
       if (result.success) {
+        toast.success(result.message || "User created and credentials email sent successfully!");
         router.push("/settings/users");
         router.refresh();
       } else {
         setError(result.error ?? "Something went wrong.");
+        toast.error(result.error ?? "Failed to create user.");
       }
     });
   }

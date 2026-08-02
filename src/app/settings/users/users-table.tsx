@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import type { User } from "@prisma/client";
 import { createUser, updateUser } from "@/lib/actions/users";
 import Pagination from "@/components/ui/pagination";
+import { toast } from "sonner";
 
 type Props = {
   users: User[];
@@ -17,7 +18,6 @@ export default function UsersTable({ users: initialUsers, showAddForm: externalS
   const showAddForm = externalShowAdd !== undefined ? externalShowAdd : internalShowAdd;
   const setShowAddForm = externalSetShowAdd ?? setInternalShowAdd;
   const [isPending, startTransition] = useTransition();
-  const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
@@ -30,11 +30,11 @@ export default function UsersTable({ users: initialUsers, showAddForm: externalS
     startTransition(async () => {
       const result = await createUser(formData);
       if (result.success) {
-        setFeedback({ type: "success", message: result.message });
+        toast.success(result.message);
         setShowAddForm(false);
         (e.target as HTMLFormElement).reset();
       } else {
-        setFeedback({ type: "error", message: result.error });
+        toast.error(result.error);
       }
     });
   }
@@ -43,11 +43,12 @@ export default function UsersTable({ users: initialUsers, showAddForm: externalS
     startTransition(async () => {
       const result = await updateUser({ userId, isActive: !isActive });
       if (!result.success) {
-        setFeedback({ type: "error", message: result.error });
+        toast.error(result.error);
       } else {
         setUsers((prev) =>
           prev.map((u) => (u.id === userId ? { ...u, isActive: !isActive } : u))
         );
+        toast.success(`User ${!isActive ? "reactivated" : "deactivated"} successfully.`);
       }
     });
   }
@@ -56,36 +57,18 @@ export default function UsersTable({ users: initialUsers, showAddForm: externalS
     startTransition(async () => {
       const result = await updateUser({ userId, role });
       if (!result.success) {
-        setFeedback({ type: "error", message: result.error });
+        toast.error(result.error);
       } else {
         setUsers((prev) =>
           prev.map((u) => (u.id === userId ? { ...u, role } : u))
         );
+        toast.success(`User role updated to ${role}.`);
       }
     });
   }
 
   return (
     <div className="space-y-4">
-      {/* Feedback banner */}
-      {feedback && (
-        <div
-          className="px-4 py-3 rounded-lg text-sm border flex items-center justify-between"
-          style={{
-            background: feedback.type === "success" ? "var(--accent-soft)" : "#FEF2F2",
-            borderColor: feedback.type === "success" ? "var(--accent)" : "#FCA5A5",
-            color: feedback.type === "success" ? "var(--accent)" : "#B91C1C",
-          }}
-        >
-          <span>{feedback.message}</span>
-          <button
-            onClick={() => setFeedback(null)}
-            className="ml-3 opacity-60 hover:opacity-100 cursor-pointer"
-          >
-            ✕
-          </button>
-        </div>
-      )}
 
       {/* Add User button (only shown when not controlled externally) + form */}
       {!showAddForm ? (

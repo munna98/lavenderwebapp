@@ -2,6 +2,7 @@
 
 import { useTransition, useState } from "react";
 import type { Supplier } from "@prisma/client";
+import { toast } from "sonner";
 
 type Props = {
   supplier?: Supplier;
@@ -56,8 +57,11 @@ export default function SupplierForm({ supplier, action, submitLabel = "Save sup
 
     startTransition(async () => {
       const result = await action(formData);
-      if (!result.success) {
+      if (result.success) {
+        toast.success("Supplier saved successfully!");
+      } else {
         setError(result.error);
+        toast.error(result.error ?? "Failed to save supplier.");
       }
     });
   }

@@ -9,6 +9,7 @@ import type { Supplier } from "@prisma/client";
 import SummaryRail from "./summary-rail";
 import SupplierCombobox from "./supplier-combobox";
 import ItemDrawer, { type DrawerItem } from "@/components/ui/item-drawer";
+import { toast } from "sonner";
 
 type Props = {
   suppliers: Supplier[];
@@ -189,8 +190,14 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
       let result: ActionResult;
       if (isEditing && initialData?.documentId) {
         result = await updateDocument(initialData.documentId, data);
+        if (result.success) {
+          toast.success("Purchase Order updated successfully!");
+        }
       } else {
         result = await createDocument(data);
+        if (result.success) {
+          toast.success("Purchase Order created successfully!");
+        }
       }
       if (!result.success) setServerError(result.error);
     });

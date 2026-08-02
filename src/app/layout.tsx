@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, IBM_Plex_Mono } from "next/font/google";
 import { getCurrentUser } from "@/lib/auth";
 import Navigation from "@/components/navigation";
+import Toaster from "@/components/ui/toaster";
 import "./globals.css";
 
 const inter = Inter({
@@ -39,6 +40,7 @@ export default async function RootLayout({
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <Navigation user={auth ? { name: auth.user.name, email: auth.user.email, role: auth.role } : null} />
         <main className="flex-1">{children}</main>
+        <Toaster />
       </body>
     </html>
   );
