@@ -75,6 +75,7 @@ export default function NewUserPage() {
               name="email"
               type="email"
               required
+              autoComplete="off"
               placeholder="email@example.com"
               className="w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-all focus:border-accent font-mono-nums"
               style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
@@ -93,6 +94,7 @@ export default function NewUserPage() {
                 type={showPassword ? "text" : "password"}
                 required
                 minLength={6}
+                autoComplete="new-password"
                 placeholder="Minimum 6 characters"
                 className="w-full px-3 py-2.5 pr-10 rounded-lg border text-sm outline-none transition-all focus:border-accent"
                 style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
