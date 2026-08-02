@@ -5,11 +5,17 @@ import type { User } from "@prisma/client";
 import { createUser, updateUser } from "@/lib/actions/users";
 import Pagination from "@/components/ui/pagination";
 
-type Props = { users: User[] };
+type Props = {
+  users: User[];
+  showAddForm?: boolean;
+  setShowAddForm?: (v: boolean) => void;
+};
 
-export default function UsersTable({ users: initialUsers }: Props) {
+export default function UsersTable({ users: initialUsers, showAddForm: externalShowAdd, setShowAddForm: externalSetShowAdd }: Props) {
   const [users, setUsers] = useState(initialUsers);
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [internalShowAdd, setInternalShowAdd] = useState(false);
+  const showAddForm = externalShowAdd !== undefined ? externalShowAdd : internalShowAdd;
+  const setShowAddForm = externalSetShowAdd ?? setInternalShowAdd;
   const [isPending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
@@ -81,22 +87,24 @@ export default function UsersTable({ users: initialUsers }: Props) {
         </div>
       )}
 
-      {/* Add User button + form */}
+      {/* Add User button (only shown when not controlled externally) + form */}
       {!showAddForm ? (
-        <div className="flex justify-end">
-          <button
-            id="add-user-btn"
-            onClick={() => setShowAddForm(true)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer transition-colors"
-            style={{ background: "var(--accent)", color: "#fff" }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            Add User
-          </button>
-        </div>
+        externalShowAdd === undefined ? (
+          <div className="flex justify-end">
+            <button
+              id="add-user-btn"
+              onClick={() => setShowAddForm(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer transition-colors"
+              style={{ background: "var(--accent)", color: "#fff" }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              Add User
+            </button>
+          </div>
+        ) : null
       ) : (
         <form
           onSubmit={handleCreateSubmit}

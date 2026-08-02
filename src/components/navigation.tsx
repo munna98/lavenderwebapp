@@ -28,6 +28,7 @@ export default function Navigation({ user }: Props) {
 
   const links = [
     { href: "/po", label: "Purchase Orders" },
+    { href: "/quotations", label: "Quotations" },
     { href: "/suppliers", label: "Suppliers" },
     ...(user.role === "ADMIN" ? [{ href: "/settings/users", label: "Staff & Users" }] : []),
   ];
