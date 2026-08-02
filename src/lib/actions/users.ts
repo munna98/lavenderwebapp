@@ -85,13 +85,13 @@ export async function createUser(formData: FormData): Promise<ActionResult> {
     await resend.emails.send({
       from: "noreply@lavenderautoparts.com",
       to: [email],
-      subject: "Welcome to Lavender Auto Parts — Your Account Credentials",
+      subject: "Welcome to Lavender Auto Spare Parts — Your Account Credentials",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 24px; border: 1px solid #E4E2DC; border-radius: 12px; background-color: #FAFAF8;">
-          <h2 style="color: #1F5C4E; margin-top: 0; font-size: 20px;">Lavender Auto Parts</h2>
+          <h2 style="color: #1F5C4E; margin-top: 0; font-size: 20px;">Lavender Auto Spare Parts</h2>
           <p style="color: #1A1917; font-size: 14px;">Hello <strong>${name}</strong>,</p>
           <p style="color: #4A4D4A; font-size: 14px; line-height: 1.5;">
-            An account has been created for you on the Lavender Auto Parts Purchase Order System.
+            An account has been created for you on the Lavender Auto Spare Parts Purchase Order System.
           </p>
           
           <div style="background-color: #FFFFFF; border: 1px solid #E4E2DC; padding: 16px; border-radius: 8px; margin: 20px 0;">
@@ -107,7 +107,7 @@ export async function createUser(formData: FormData): Promise<ActionResult> {
           </a>
 
           <p style="color: #70766F; font-size: 12px; margin-top: 30px; border-top: 1px solid #E4E2DC; padding-top: 12px;">
-            Lavender Auto Parts — Internal System.
+            Lavender Auto Spare Parts — Internal System.
           </p>
         </div>
       `,
