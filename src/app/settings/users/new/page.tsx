@@ -85,6 +85,21 @@ export default function NewUserPage() {
             />
           </div>
 
+          {/* Mobile / Phone */}
+          <div>
+            <label htmlFor="new-phone" className="block text-sm font-medium mb-1.5">
+              Mobile Number
+            </label>
+            <input
+              id="new-phone"
+              name="phone"
+              type="tel"
+              placeholder="+971 50 123 4567"
+              className="w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-all focus:border-accent font-mono-nums"
+              style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
+            />
+          </div>
+
           {/* Password */}
           <div>
             <label htmlFor="new-password" className="block text-sm font-medium mb-1.5">

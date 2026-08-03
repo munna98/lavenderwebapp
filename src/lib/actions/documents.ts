@@ -228,12 +228,14 @@ export async function sendDocument(documentId: string): Promise<ActionResult> {
 
     const resend = new Resend(process.env.RESEND_API_KEY);
 
+    const senderMobile = document.createdBy.phone ? `\nMobile: ${document.createdBy.phone}` : "";
+
     const { error: emailError } = await resend.emails.send({
       from: process.env.RESEND_FROM_EMAIL ?? "orders@lavenderautoparts.com",
       replyTo: document.createdBy.email,
       to: [targetEmail],
       subject: `Purchase Order ${document.number} — Lavender Auto Spare Parts`,
-      text: `Hello ${document.supplier.name},\n\nPlease find attached Purchase Order ${document.number} from Lavender Auto Spare Parts.\n\nTotal: ${totals.totalFormatted}\n\nKind regards,\n${document.createdBy.name}\nLavender Auto Spare Parts`,
+      text: `Hello ${document.supplier.name},\n\nPlease find attached Purchase Order ${document.number} from Lavender Auto Spare Parts.\n\nTotal: ${totals.totalFormatted}\n\nKind regards,\n${document.createdBy.name}${senderMobile}\nLavender Auto Spare Parts`,
       attachments: [
         {
           filename: `${document.number}.pdf`,

@@ -193,6 +193,9 @@ export default function UsersTable({ users: initialUsers, showAddForm: externalS
                 <div className="min-w-0">
                   <p className="font-semibold text-sm truncate" style={{ color: "var(--foreground)" }}>{user.name}</p>
                   <p className="text-xs mt-0.5 truncate font-mono-nums" style={{ color: "var(--muted-foreground)" }}>{user.email}</p>
+                  {user.phone && (
+                    <p className="text-xs mt-0.5 font-mono-nums" style={{ color: "var(--muted-foreground)" }}>{user.phone}</p>
+                  )}
                   <div className="flex items-center gap-2 mt-2">
                     <span
                       className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
@@ -242,6 +245,7 @@ export default function UsersTable({ users: initialUsers, showAddForm: externalS
             <tr style={{ background: "var(--surface-raised)", borderBottom: "1px solid var(--border)" }}>
               <th className="text-left px-4 py-3 font-medium text-xs uppercase tracking-wider" style={{ color: "var(--muted-foreground)" }}>Name</th>
               <th className="text-left px-4 py-3 font-medium text-xs uppercase tracking-wider" style={{ color: "var(--muted-foreground)" }}>Email</th>
+              <th className="text-left px-4 py-3 font-medium text-xs uppercase tracking-wider hidden md:table-cell" style={{ color: "var(--muted-foreground)" }}>Mobile</th>
               <th className="text-left px-4 py-3 font-medium text-xs uppercase tracking-wider" style={{ color: "var(--muted-foreground)" }}>Role</th>
               <th className="text-left px-4 py-3 font-medium text-xs uppercase tracking-wider" style={{ color: "var(--muted-foreground)" }}>Status</th>
               <th className="px-4 py-3" />
@@ -250,7 +254,7 @@ export default function UsersTable({ users: initialUsers, showAddForm: externalS
           <tbody>
             {users.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-sm" style={{ color: "var(--muted-foreground)" }}>
+                <td colSpan={6} className="px-4 py-8 text-center text-sm" style={{ color: "var(--muted-foreground)" }}>
                   No users yet. Add a user to get started.
                 </td>
               </tr>
@@ -264,7 +268,10 @@ export default function UsersTable({ users: initialUsers, showAddForm: externalS
                   }}
                 >
                   <td className="px-4 py-3 font-medium">{user.name}</td>
-                  <td className="px-4 py-3" style={{ color: "var(--muted-foreground)" }}>{user.email}</td>
+                  <td className="px-4 py-3 font-mono-nums" style={{ color: "var(--muted-foreground)" }}>{user.email}</td>
+                  <td className="px-4 py-3 hidden md:table-cell font-mono-nums text-xs" style={{ color: "var(--muted-foreground)" }}>
+                    {user.phone || "—"}
+                  </td>
                   <td className="px-4 py-3">
                     <select
                       value={user.role}

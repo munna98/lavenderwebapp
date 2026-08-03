@@ -10,6 +10,7 @@ import { Resend } from "resend";
 const CreateUserSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email address"),
+  phone: z.string().optional().nullable(),
   password: z.string().min(6, "Password must be at least 6 characters"),
   role: z.enum(["ADMIN", "STAFF"]),
 });
@@ -35,6 +36,7 @@ export async function createUser(formData: FormData): Promise<ActionResult> {
   const parsed = CreateUserSchema.safeParse({
     name: formData.get("name"),
     email: formData.get("email"),
+    phone: formData.get("phone"),
     password: formData.get("password"),
     role: formData.get("role"),
   });
@@ -44,7 +46,7 @@ export async function createUser(formData: FormData): Promise<ActionResult> {
     return { success: false, error: issues[0]?.message ?? "Validation failed" };
   }
 
-  const { name, email, password, role } = parsed.data;
+  const { name, email, phone, password, role } = parsed.data;
 
   try {
     const adminClient = createAdminClient();
@@ -60,7 +62,7 @@ export async function createUser(formData: FormData): Promise<ActionResult> {
         email,
         password,
         email_confirm: true,
-        user_metadata: { name, role },
+        user_metadata: { name, role, phone: phone || undefined },
       });
 
     if (authError || !authData?.user) {
@@ -73,6 +75,7 @@ export async function createUser(formData: FormData): Promise<ActionResult> {
         id: authData.user.id,
         name,
         email,
+        phone: phone || null,
         role,
         isActive: true,
       },
