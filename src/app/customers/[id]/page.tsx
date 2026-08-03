@@ -4,7 +4,7 @@ import { computeTotals } from "@/lib/utils/totals";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
-import SupplierPoTable from "./supplier-po-table";
+import CustomerQuotationsTable from "./customer-quotations-table";
 
 export async function generateMetadata({
   params,
@@ -12,29 +12,29 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const supplier = await prisma.supplier.findUnique({
+  const customer = await prisma.customer.findUnique({
     where: { id },
     select: { name: true },
   });
   return {
-    title: supplier ? `${supplier.name} — Lavender Auto Parts` : "Supplier Detail",
+    title: customer ? `${customer.name} — Lavender Auto Parts` : "Customer Detail",
   };
 }
 
-export default async function SupplierDetailPage({
+export default async function CustomerDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
 
-  const [auth, supplier] = await Promise.all([
+  const [auth, customer] = await Promise.all([
     requireAuth(),
-    prisma.supplier.findUnique({
+    prisma.customer.findUnique({
       where: { id },
       include: {
         documents: {
-          where: { type: "PO" },
+          where: { type: "QUOTATION" },
           orderBy: { createdAt: "desc" },
           include: {
             createdBy: true,
@@ -45,9 +45,9 @@ export default async function SupplierDetailPage({
     }),
   ]);
 
-  if (!supplier) notFound();
+  if (!customer) notFound();
 
-  const formattedDocuments = supplier.documents.map((doc) => {
+  const formattedDocuments = customer.documents.map((doc) => {
     const totals = computeTotals(
       doc.items.map((item) => ({
         qty: item.qty.toString(),
@@ -70,16 +70,16 @@ export default async function SupplierDetailPage({
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-6" style={{ borderColor: "var(--border)" }}>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{supplier.name}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{customer.name}</h1>
           <p className="text-sm mt-0.5" style={{ color: "var(--muted-foreground)" }}>
-            Added on {supplier.createdAt.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+            Added on {customer.createdAt.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           {auth.role === "ADMIN" && (
             <Link
-              href={`/suppliers/${supplier.id}/edit`}
+              href={`/customers/${customer.id}/edit`}
               className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg text-sm border font-medium cursor-pointer transition-colors hover:bg-surface-raised"
               style={{ borderColor: "var(--border)", color: "var(--foreground)", background: "var(--surface)" }}
             >
@@ -88,11 +88,11 @@ export default async function SupplierDetailPage({
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
               </svg>
               <span className="sm:hidden">Edit</span>
-              <span className="hidden sm:inline">Edit Supplier</span>
+              <span className="hidden sm:inline">Edit Customer</span>
             </Link>
           )}
           <Link
-            href="/po/new"
+            href={`/quotations/new?customerId=${customer.id}`}
             className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
             style={{ background: "var(--accent)", color: "#fff" }}
           >
@@ -100,11 +100,11 @@ export default async function SupplierDetailPage({
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
-            <span className="sm:hidden">New PO</span>
-            <span className="hidden sm:inline">Create PO</span>
+            <span className="sm:hidden">New Quote</span>
+            <span className="hidden sm:inline">Create Quotation</span>
           </Link>
           <Link
-            href="/suppliers"
+            href="/customers"
             className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg text-sm border font-medium cursor-pointer transition-colors hover:bg-surface-raised"
             style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}
           >
@@ -113,21 +113,21 @@ export default async function SupplierDetailPage({
               <polyline points="12 19 5 12 12 5" />
             </svg>
             <span className="sm:hidden">Back</span>
-            <span className="hidden sm:inline">Back to Suppliers</span>
+            <span className="hidden sm:inline">Back to Customers</span>
           </Link>
         </div>
       </div>
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Left Column: Supplier Details */}
+        {/* Left Column: Customer Details */}
         <div className="space-y-4 md:col-span-1">
           <div
             className="rounded-xl border p-5 space-y-4"
             style={{ background: "var(--surface)", borderColor: "var(--border)" }}
           >
             <h2 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--muted-foreground)" }}>
-              Supplier Info
+              Customer Info
             </h2>
 
             <div>
@@ -135,11 +135,11 @@ export default async function SupplierDetailPage({
                 Email Addresses
               </p>
               <p className="text-sm font-medium mt-0.5" style={{ color: "var(--foreground)" }}>
-                {supplier.email || "—"}
+                {customer.email || "—"}
               </p>
-              {supplier.additionalEmails && (
+              {customer.additionalEmails && (
                 <p className="text-xs mt-1 font-mono-nums" style={{ color: "var(--muted-foreground)" }}>
-                  Additional: {supplier.additionalEmails}
+                  Additional: {customer.additionalEmails}
                 </p>
               )}
             </div>
@@ -149,7 +149,7 @@ export default async function SupplierDetailPage({
                 Phone
               </p>
               <p className="text-sm font-medium mt-0.5" style={{ color: "var(--foreground)" }}>
-                {supplier.phone || "—"}
+                {customer.phone || "—"}
               </p>
             </div>
 
@@ -158,7 +158,7 @@ export default async function SupplierDetailPage({
                 Address
               </p>
               <p className="text-sm font-medium mt-0.5 whitespace-pre-line" style={{ color: "var(--foreground)" }}>
-                {supplier.address || "—"}
+                {customer.address || "—"}
               </p>
             </div>
 
@@ -167,22 +167,22 @@ export default async function SupplierDetailPage({
                 Tax ID
               </p>
               <p className="text-sm font-mono-nums font-medium mt-0.5" style={{ color: "var(--foreground)" }}>
-                {supplier.taxId || "—"}
+                {customer.taxId || "—"}
               </p>
             </div>
           </div>
         </div>
 
-        {/* Right Column: Purchase Orders */}
+        {/* Right Column: Sales Quotations */}
         <div className="md:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold tracking-tight">Purchase Orders</h2>
+            <h2 className="text-base font-semibold tracking-tight">Sales Quotations</h2>
             <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>
-              {supplier.documents.length} order{supplier.documents.length !== 1 ? "s" : ""}
+              {customer.documents.length} quote{customer.documents.length !== 1 ? "s" : ""}
             </span>
           </div>
 
-          <SupplierPoTable documents={formattedDocuments} />
+          <CustomerQuotationsTable documents={formattedDocuments} />
         </div>
       </div>
     </div>

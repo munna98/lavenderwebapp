@@ -13,6 +13,7 @@ export default async function PoListPage() {
   await requireAuth();
 
   const pos = await prisma.document.findMany({
+    where: { type: "PO" },
     orderBy: { createdAt: "desc" },
     include: {
       supplier: { select: { id: true, name: true } },

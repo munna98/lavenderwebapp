@@ -3,38 +3,50 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { DocumentStatus } from "@prisma/client";
 import Pagination from "@/components/ui/pagination";
 
-type PoItem = {
+type QuotationItem = {
   id: string;
   number: string;
-  status: DocumentStatus;
+  status: "DRAFT" | "SENT" | "CANCELLED";
   createdAt: Date;
-  sentAt: Date | null;
-  supplier: { id: string; name: string } | null;
-  createdBy: { id: string; name: string };
-  customerName?: string | null;
-  customerContact?: string | null;
-  partNumbers?: string[];
+  customerId: string | null;
+  customerName: string | null;
+  customer: {
+    id: string;
+    name: string;
+  } | null;
+  createdBy: {
+    name: string;
+  };
   itemsCount: number;
   totalFormatted: string;
+  partNumbers?: string[];
+};
+
+type CustomerFilterItem = {
+  id: string;
+  name: string;
 };
 
 type Props = {
-  pos: PoItem[];
-  suppliers: { id: string; name: string }[];
+  quotations: QuotationItem[];
+  customers: CustomerFilterItem[];
 };
 
-export default function PoListClient({ pos, suppliers }: Props) {
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("ALL");
-  const [supplierFilter, setSupplierFilter] = useState<string>("ALL");
+const badgeStyles = {
+  DRAFT: { background: "var(--status-draft-bg)", color: "var(--status-draft-text)" },
+  SENT: { background: "var(--status-sent-bg)", color: "var(--status-sent-text)" },
+  CANCELLED: { background: "var(--status-cancelled-bg)", color: "var(--status-cancelled-text)" },
+};
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(25);
-
+export default function QuotationsClient({ quotations, customers }: Props) {
   const router = useRouter();
+  const [search, setSearch] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [customerFilter, setCustomerFilter] = useState<string>("ALL");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(25);
 
   function handleSearchChange(val: string) {
     setSearch(val);
@@ -46,64 +58,72 @@ export default function PoListClient({ pos, suppliers }: Props) {
     setCurrentPage(1);
   }
 
-  function handleSupplierFilterChange(val: string) {
-    setSupplierFilter(val);
+  function handleCustomerFilterChange(val: string) {
+    setCustomerFilter(val);
     setCurrentPage(1);
   }
 
-  const filtered = pos.filter((item) => {
+  const filtered = quotations.filter((item) => {
     const rawQ = search.toLowerCase();
     const cleanQ = rawQ.replace(/\s+/g, "");
 
+    const customerName = item.customer?.name || item.customerName || "";
+
     const matchesSearch =
       item.number.toLowerCase().includes(rawQ) ||
-      (item.supplier?.name && item.supplier.name.toLowerCase().includes(rawQ)) ||
+      customerName.toLowerCase().includes(rawQ) ||
       item.createdBy.name.toLowerCase().includes(rawQ) ||
-      (item.customerName && item.customerName.toLowerCase().includes(rawQ)) ||
-      (item.customerContact && item.customerContact.toLowerCase().includes(rawQ)) ||
       (item.partNumbers &&
         item.partNumbers.some(
           (p) => p.toLowerCase().includes(rawQ) || p.toLowerCase().includes(cleanQ)
         ));
 
     const matchesStatus = statusFilter === "ALL" || item.status === statusFilter;
-    const matchesSupplier = supplierFilter === "ALL" || item.supplier?.id === supplierFilter;
+    const matchesCustomer =
+      customerFilter === "ALL" ||
+      (item.customer && item.customer.id === customerFilter) ||
+      item.customerId === customerFilter;
 
-    return matchesSearch && matchesStatus && matchesSupplier;
+    return matchesSearch && matchesStatus && matchesCustomer;
   });
 
-  const paginated = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-
-  const badgeStyles = {
-    DRAFT: { background: "var(--status-draft-bg)", color: "var(--status-draft-text)" },
-    SENT: { background: "var(--status-sent-bg)", color: "var(--status-sent-text)" },
-    CANCELLED: { background: "var(--status-cancelled-bg)", color: "var(--status-cancelled-text)" },
-  };
+  const paginated = filtered.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   return (
     <div className="space-y-4">
-      {/* Controls */}
+      {/* Controls Section (Matching PO List 1:1) */}
       <div className="flex flex-col sm:flex-row gap-3">
         {/* Search */}
         <div className="relative flex-1">
           <input
-            id="po-list-search"
+            id="quotation-list-search"
             type="search"
-            placeholder="Search PO #, part #, supplier, customer, or creator..."
+            placeholder="Search Quotation #, part #, customer, or creator..."
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
             className="w-full px-3 py-2 rounded-lg border text-sm outline-none"
-            style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
+            style={{
+              borderColor: "var(--border)",
+              background: "var(--surface)",
+              color: "var(--foreground)",
+            }}
           />
         </div>
 
         {/* Filter by Status */}
         <select
-          id="po-status-filter"
+          id="quotation-status-filter"
           value={statusFilter}
           onChange={(e) => handleStatusFilterChange(e.target.value)}
           className="px-3 py-2 rounded-lg border text-sm outline-none cursor-pointer"
-          style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
+          style={{
+            borderColor: "var(--border)",
+            background: "var(--surface)",
+            color: "var(--foreground)",
+          }}
         >
           <option value="ALL">All Statuses</option>
           <option value="DRAFT">Draft</option>
@@ -111,18 +131,22 @@ export default function PoListClient({ pos, suppliers }: Props) {
           <option value="CANCELLED">Cancelled</option>
         </select>
 
-        {/* Filter by Supplier */}
+        {/* Filter by Customer */}
         <select
-          id="po-supplier-filter"
-          value={supplierFilter}
-          onChange={(e) => handleSupplierFilterChange(e.target.value)}
+          id="quotation-customer-filter"
+          value={customerFilter}
+          onChange={(e) => handleCustomerFilterChange(e.target.value)}
           className="px-3 py-2 rounded-lg border text-sm outline-none cursor-pointer"
-          style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
+          style={{
+            borderColor: "var(--border)",
+            background: "var(--surface)",
+            color: "var(--foreground)",
+          }}
         >
-          <option value="ALL">All Suppliers</option>
-          {suppliers.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name}
+          <option value="ALL">All Customers</option>
+          {customers.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
             </option>
           ))}
         </select>
@@ -132,13 +156,13 @@ export default function PoListClient({ pos, suppliers }: Props) {
       <div className="sm:hidden space-y-2">
         {filtered.length === 0 ? (
           <div className="rounded-xl border p-8 text-center text-sm" style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}>
-            No purchase orders found matching your criteria.
+            No sales quotations found matching your criteria.
           </div>
         ) : (
           paginated.map((item) => (
             <Link
               key={item.id}
-              href={`/po/${item.id}`}
+              href={`/quotations/${item.id}`}
               className="block rounded-xl border px-4 py-3.5 transition-colors hover:bg-surface-raised"
               style={{ background: "var(--surface)", borderColor: "var(--border)" }}
             >
@@ -153,10 +177,9 @@ export default function PoListClient({ pos, suppliers }: Props) {
                       {item.status}
                     </span>
                   </div>
-                  <p className="text-sm font-medium mt-1 truncate" style={{ color: "var(--foreground)" }}>{item.supplier?.name || "—"}</p>
-                  {item.customerName && (
-                    <p className="text-xs mt-0.5" style={{ color: "var(--muted-foreground)" }}>Ref: {item.customerName}</p>
-                  )}
+                  <p className="text-sm font-medium mt-1 truncate" style={{ color: "var(--foreground)" }}>
+                    {item.customer?.name || item.customerName || "Cash Customer"}
+                  </p>
                   <p className="text-xs mt-1" style={{ color: "var(--muted-foreground)" }}>
                     {new Date(item.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} · {item.createdBy.name}
                   </p>
@@ -179,8 +202,8 @@ export default function PoListClient({ pos, suppliers }: Props) {
         <table className="w-full text-sm">
           <thead>
             <tr style={{ background: "var(--surface-raised)", borderBottom: "1px solid var(--border)" }}>
-              <th className="text-left px-4 py-3 font-medium text-xs uppercase" style={{ color: "var(--muted-foreground)" }}>PO #</th>
-              <th className="text-left px-4 py-3 font-medium text-xs uppercase" style={{ color: "var(--muted-foreground)" }}>Supplier</th>
+              <th className="text-left px-4 py-3 font-medium text-xs uppercase" style={{ color: "var(--muted-foreground)" }}>Quotation #</th>
+              <th className="text-left px-4 py-3 font-medium text-xs uppercase" style={{ color: "var(--muted-foreground)" }}>Customer</th>
               <th className="text-left px-4 py-3 font-medium text-xs uppercase hidden md:table-cell" style={{ color: "var(--muted-foreground)" }}>Created By</th>
               <th className="text-left px-4 py-3 font-medium text-xs uppercase hidden sm:table-cell" style={{ color: "var(--muted-foreground)" }}>Date</th>
               <th className="text-left px-4 py-3 font-medium text-xs uppercase" style={{ color: "var(--muted-foreground)" }}>Status</th>
@@ -191,15 +214,15 @@ export default function PoListClient({ pos, suppliers }: Props) {
             {filtered.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-4 py-8 text-center text-sm" style={{ color: "var(--muted-foreground)" }}>
-                  No purchase orders found matching your criteria.
+                  No sales quotations found matching your criteria.
                 </td>
               </tr>
             ) : (
               paginated.map((item, idx) => (
                 <tr
                   key={item.id}
-                  onClick={() => router.push(`/po/${item.id}`)}
-                  onMouseEnter={() => router.prefetch(`/po/${item.id}`)}
+                  onClick={() => router.push(`/quotations/${item.id}`)}
+                  onMouseEnter={() => router.prefetch(`/quotations/${item.id}`)}
                   className="cursor-pointer transition-colors hover:bg-surface-raised"
                   style={{
                     borderTop: idx > 0 ? "1px solid var(--border)" : undefined,
@@ -208,7 +231,7 @@ export default function PoListClient({ pos, suppliers }: Props) {
                 >
                   <td className="px-4 py-3">
                     <Link
-                      href={`/po/${item.id}`}
+                      href={`/quotations/${item.id}`}
                       prefetch={true}
                       className="font-semibold hover:underline"
                       style={{ color: "var(--accent)" }}
@@ -218,14 +241,7 @@ export default function PoListClient({ pos, suppliers }: Props) {
                     </Link>
                   </td>
                   <td className="px-4 py-3 font-medium">
-                    <div>
-                      <p>{item.supplier?.name || "—"}</p>
-                      {item.customerName && (
-                        <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>
-                          Ref: {item.customerName}
-                        </p>
-                      )}
-                    </div>
+                    {item.customer?.name || item.customerName || "Cash Customer"}
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell" style={{ color: "var(--muted-foreground)" }}>
                     {item.createdBy.name}

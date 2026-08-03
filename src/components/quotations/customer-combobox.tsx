@@ -1,30 +1,38 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import type { Supplier } from "@prisma/client";
+import type { Customer } from "@prisma/client";
 
 type Props = {
-  suppliers: Supplier[];
-  value: string;
-  onChange: (value: string) => void;
+  customers: Customer[];
+  selectedCustomerId: string;
+  onSelect: (customerId: string, customerEmail?: string) => void;
+  error?: string;
   onEnterNext?: () => void;
 };
 
-export default function SupplierCombobox({ suppliers, value, onChange, onEnterNext }: Props) {
+export default function CustomerCombobox({
+  customers,
+  selectedCustomerId,
+  onSelect,
+  error,
+  onEnterNext,
+}: Props) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const selected = suppliers.find((s) => s.id === value);
+  const selected = customers.find((c) => c.id === selectedCustomerId);
 
   const filtered = query
-    ? suppliers.filter(
-        (s) =>
-          s.name.toLowerCase().includes(query.toLowerCase()) ||
-          s.email?.toLowerCase().includes(query.toLowerCase())
+    ? customers.filter(
+        (c) =>
+          c.name.toLowerCase().includes(query.toLowerCase()) ||
+          c.email?.toLowerCase().includes(query.toLowerCase()) ||
+          c.phone?.includes(query)
       )
-    : suppliers;
+    : customers;
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -37,8 +45,8 @@ export default function SupplierCombobox({ suppliers, value, onChange, onEnterNe
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  function handleSelect(supplierId: string) {
-    onChange(supplierId);
+  function handleSelect(customer: Customer) {
+    onSelect(customer.id, customer.email ?? undefined);
     setOpen(false);
     setQuery("");
     if (onEnterNext) {
@@ -48,12 +56,14 @@ export default function SupplierCombobox({ suppliers, value, onChange, onEnterNe
 
   function handleOpenToggle() {
     setOpen((prev) => !prev);
-    setTimeout(() => inputRef.current?.focus(), 50);
+    if (!open) {
+      setTimeout(() => inputRef.current?.focus(), 50);
+    }
   }
 
   function handleTriggerKeyDown(e: React.KeyboardEvent<HTMLButtonElement>) {
     if (e.key === "Enter") {
-      if (value && !open) {
+      if (selectedCustomerId && !open) {
         e.preventDefault();
         onEnterNext?.();
       } else if (!open) {
@@ -66,27 +76,31 @@ export default function SupplierCombobox({ suppliers, value, onChange, onEnterNe
   function handleSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter" && filtered.length > 0) {
       e.preventDefault();
-      handleSelect(filtered[0].id);
+      handleSelect(filtered[0]);
     }
   }
 
   return (
     <div ref={containerRef} className="relative">
+      <label htmlFor="customer-combobox-trigger" className="block text-sm font-medium mb-1.5" style={{ color: "var(--foreground)" }}>
+        Customer <span style={{ color: "var(--brass)" }}>*</span>
+      </label>
+
       {/* Trigger */}
       <button
         type="button"
-        id="supplier-combobox-trigger"
+        id="customer-combobox-trigger"
         onClick={handleOpenToggle}
         onKeyDown={handleTriggerKeyDown}
         className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg border text-sm text-left outline-none cursor-pointer transition-all"
         style={{
-          borderColor: open ? "var(--accent)" : "var(--border)",
+          borderColor: error ? "#EF4444" : open ? "var(--accent)" : "var(--border)",
           background: "var(--surface)",
           color: selected ? "var(--foreground)" : "var(--muted-foreground)",
           boxShadow: open ? "0 0 0 3px rgba(31,92,78,0.12)" : undefined,
         }}
       >
-        <span>{selected ? selected.name : "Select a supplier…"}</span>
+        <span>{selected ? selected.name : "Select a customer…"}</span>
         <svg
           width="14"
           height="14"
@@ -101,6 +115,12 @@ export default function SupplierCombobox({ suppliers, value, onChange, onEnterNe
           <polyline points="6 9 12 15 18 9" />
         </svg>
       </button>
+
+      {error && (
+        <p className="text-xs font-medium mt-1" style={{ color: "#EF4444" }}>
+          {error}
+        </p>
+      )}
 
       {/* Dropdown */}
       {open && (
@@ -117,7 +137,7 @@ export default function SupplierCombobox({ suppliers, value, onChange, onEnterNe
             <input
               ref={inputRef}
               type="text"
-              placeholder="Search suppliers…"
+              placeholder="Search customers…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleSearchKeyDown}
@@ -134,39 +154,39 @@ export default function SupplierCombobox({ suppliers, value, onChange, onEnterNe
           <ul className="max-h-52 overflow-y-auto py-1">
             {filtered.length === 0 ? (
               <li className="px-3 py-2 text-sm" style={{ color: "var(--muted-foreground)" }}>
-                No suppliers found
+                No customers found matching &ldquo;{query}&rdquo;
               </li>
             ) : (
-              filtered.map((supplier) => (
-                <li key={supplier.id}>
+              filtered.map((customer) => (
+                <li key={customer.id}>
                   <button
                     type="button"
-                    onClick={() => handleSelect(supplier.id)}
+                    onClick={() => handleSelect(customer)}
                     className="w-full text-left px-3 py-2 text-sm cursor-pointer transition-colors flex items-center justify-between"
                     style={{
-                      background: supplier.id === value ? "var(--accent-soft)" : "transparent",
-                      color: supplier.id === value ? "var(--accent)" : "var(--foreground)",
+                      background: customer.id === selectedCustomerId ? "var(--accent-soft)" : "transparent",
+                      color: customer.id === selectedCustomerId ? "var(--accent)" : "var(--foreground)",
                     }}
                     onMouseEnter={(e) => {
-                      if (supplier.id !== value)
+                      if (customer.id !== selectedCustomerId)
                         (e.currentTarget as HTMLButtonElement).style.background =
                           "var(--surface-raised)";
                     }}
                     onMouseLeave={(e) => {
-                      if (supplier.id !== value)
+                      if (customer.id !== selectedCustomerId)
                         (e.currentTarget as HTMLButtonElement).style.background =
                           "transparent";
                     }}
                   >
                     <div>
-                      <div className="font-medium">{supplier.name}</div>
-                      {supplier.email && (
+                      <div className="font-medium">{customer.name}</div>
+                      {customer.email && (
                         <div className="text-xs mt-0.5" style={{ color: "var(--muted-foreground)" }}>
-                          {supplier.email}
+                          {customer.email}
                         </div>
                       )}
                     </div>
-                    {supplier.id === value && (
+                    {customer.id === selectedCustomerId && (
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="20 6 9 17 4 12" />
                       </svg>

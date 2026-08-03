@@ -12,22 +12,21 @@ export type ActionResult =
   | { success: true; id: string }
   | { success: false; error: string; fieldErrors?: Record<string, string[]> };
 
-async function generatePoNumber(
+async function generateQuotationNumber(
   tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0]
 ): Promise<string> {
   const result = await tx.$queryRaw<{ current: number }[]>`
-    UPDATE po_sequence
-    SET current = current + 1
-    WHERE name = 'po'
+    INSERT INTO po_sequence (name, current)
+    VALUES ('quotation', 1)
+    ON CONFLICT (name) DO UPDATE
+    SET current = po_sequence.current + 1
     RETURNING current
   `;
   const next = result[0]?.current ?? 1;
-  return `PO-${next}`;
+  return `SQ-${next}`;
 }
 
-export async function createDocument(
-  data: unknown
-): Promise<ActionResult> {
+export async function createQuotation(data: unknown): Promise<ActionResult> {
   const auth = await requireAuth();
 
   const parsed = CreateDocumentSchema.safeParse(data);
@@ -41,24 +40,26 @@ export async function createDocument(
 
   const { supplierId, supplierEmail, notes, customerName, customerContact, items } = parsed.data;
 
-  const supplier = await prisma.supplier.findUnique({ where: { id: supplierId } });
-  if (!supplier) {
-    return { success: false, error: "Selected supplier does not exist." };
+  // For Quotations, supplierId form field represents the customerId
+  const customerId = supplierId;
+  const customer = await prisma.customer.findUnique({ where: { id: customerId } });
+  if (!customer) {
+    return { success: false, error: "Selected customer does not exist." };
   }
 
   let docId = "";
 
   try {
     const document = await prisma.$transaction(async (tx) => {
-      const poNumber = await generatePoNumber(tx);
+      const sqNumber = await generateQuotationNumber(tx);
 
       return tx.document.create({
         data: {
-          number: poNumber,
-          type: "PO",
+          number: sqNumber,
+          type: "QUOTATION",
           status: "DRAFT",
-          supplierId,
-          supplierEmail: supplierEmail || supplier.email || null,
+          customerId,
+          customerEmail: supplierEmail || customer.email || null,
           createdById: auth.user.id,
           notes: notes || null,
           customerName: customerName || null,
@@ -77,15 +78,15 @@ export async function createDocument(
     });
     docId = document.id;
   } catch (err: unknown) {
-    console.error("createDocument error:", err);
-    return { success: false, error: "Failed to create purchase order." };
+    console.error("createQuotation error:", err);
+    return { success: false, error: "Failed to create sales quotation." };
   }
 
-  revalidatePath("/po");
-  redirect(`/po/${docId}`);
+  revalidatePath("/quotations");
+  redirect(`/quotations/${docId}`);
 }
 
-export async function updateDocument(
+export async function updateQuotation(
   documentId: string,
   data: unknown
 ): Promise<ActionResult> {
@@ -95,16 +96,9 @@ export async function updateDocument(
     where: { id: documentId },
   });
 
-  if (!existingDoc) return { success: false, error: "Document not found." };
+  if (!existingDoc) return { success: false, error: "Quotation not found." };
   if (existingDoc.status !== "DRAFT") {
-    return { success: false, error: "Only DRAFT documents can be edited." };
-  }
-
-  const canEdit =
-    auth.role === "ADMIN" || existingDoc.createdById === auth.user.id;
-
-  if (!canEdit) {
-    return { success: false, error: "You don't have permission to edit this document." };
+    return { success: false, error: "Only DRAFT quotations can be edited." };
   }
 
   const parsed = CreateDocumentSchema.safeParse(data);
@@ -117,10 +111,11 @@ export async function updateDocument(
   }
 
   const { supplierId, supplierEmail, notes, customerName, customerContact, items } = parsed.data;
+  const customerId = supplierId;
 
-  const supplier = await prisma.supplier.findUnique({ where: { id: supplierId } });
-  if (!supplier) {
-    return { success: false, error: "Selected supplier does not exist." };
+  const customer = await prisma.customer.findUnique({ where: { id: customerId } });
+  if (!customer) {
+    return { success: false, error: "Selected customer does not exist." };
   }
 
   try {
@@ -132,8 +127,8 @@ export async function updateDocument(
       await tx.document.update({
         where: { id: documentId },
         data: {
-          supplierId,
-          supplierEmail: supplierEmail || supplier.email || null,
+          customerId,
+          customerEmail: supplierEmail || customer.email || null,
           notes: notes || null,
           customerName: customerName || null,
           customerContact: customerContact || null,
@@ -150,30 +145,30 @@ export async function updateDocument(
       });
     });
   } catch (err: unknown) {
-    console.error("updateDocument error:", err);
-    return { success: false, error: "Failed to update purchase order." };
+    console.error("updateQuotation error:", err);
+    return { success: false, error: "Failed to update sales quotation." };
   }
 
-  revalidatePath("/po");
-  revalidatePath(`/po/${documentId}`);
-  redirect(`/po/${documentId}`);
+  revalidatePath("/quotations");
+  revalidatePath(`/quotations/${documentId}`);
+  redirect(`/quotations/${documentId}`);
 }
 
-export async function cancelDocument(documentId: string): Promise<ActionResult> {
+export async function cancelQuotation(documentId: string): Promise<ActionResult> {
   const auth = await requireAuth();
 
   const document = await prisma.document.findUnique({
     where: { id: documentId },
   });
 
-  if (!document) return { success: false, error: "Document not found." };
+  if (!document) return { success: false, error: "Quotation not found." };
 
   const canCancel =
     auth.role === "ADMIN" ||
     (document.createdById === auth.user.id && document.status === "DRAFT");
 
   if (!canCancel) {
-    return { success: false, error: "You don't have permission to cancel this document." };
+    return { success: false, error: "You don't have permission to cancel this quotation." };
   }
 
   await prisma.document.update({
@@ -181,36 +176,36 @@ export async function cancelDocument(documentId: string): Promise<ActionResult> 
     data: { status: "CANCELLED" },
   });
 
-  revalidatePath("/po");
-  revalidatePath(`/po/${documentId}`);
+  revalidatePath("/quotations");
+  revalidatePath(`/quotations/${documentId}`);
   return { success: true, id: documentId };
 }
 
-export async function sendDocument(documentId: string): Promise<ActionResult> {
-  const auth = await requireAuth();
+export async function sendQuotation(documentId: string): Promise<ActionResult> {
+  await requireAuth();
 
   const document = await prisma.document.findUnique({
     where: { id: documentId },
     include: {
-      supplier: true,
+      customer: true,
       createdBy: true,
       items: true,
     },
   });
 
-  if (!document) return { success: false, error: "Document not found." };
+  if (!document) return { success: false, error: "Quotation not found." };
   if (document.status !== "DRAFT") {
-    return { success: false, error: "Only DRAFT documents can be sent." };
+    return { success: false, error: "Only DRAFT quotations can be sent." };
   }
 
-  const targetEmail = document.supplierEmail || document.supplier?.email;
+  const targetEmail = document.customerEmail || document.customer?.email;
   if (!targetEmail) {
-    return { success: false, error: "Supplier has no email address specified for this order." };
+    return { success: false, error: "Customer has no email address specified for this quotation." };
   }
 
   try {
     const { renderToBuffer } = await import("@react-pdf/renderer");
-    const { default: PurchaseOrderPdf } = await import("@/components/pdf/purchase-order-pdf");
+    const { default: QuotationPdf } = await import("@/components/pdf/quotation-pdf");
     const { Resend } = await import("resend");
     const { createElement } = await import("react");
 
@@ -223,7 +218,7 @@ export async function sendDocument(documentId: string): Promise<ActionResult> {
     );
 
     const pdfBuffer = await renderToBuffer(
-      createElement(PurchaseOrderPdf, { document, totals }) as unknown as React.ReactElement<any>
+      createElement(QuotationPdf, { document: document as any, totals }) as unknown as React.ReactElement<any>
     );
 
     const resend = new Resend(process.env.RESEND_API_KEY);
@@ -234,8 +229,8 @@ export async function sendDocument(documentId: string): Promise<ActionResult> {
       from: process.env.RESEND_FROM_EMAIL ?? "orders@lavenderautoparts.com",
       replyTo: document.createdBy.email,
       to: [targetEmail],
-      subject: `Purchase Order ${document.number} — Lavender Auto Spare Parts`,
-      text: `Hello ${document.supplier?.name || "Supplier"},\n\nPlease find attached Purchase Order ${document.number} from Lavender Auto Spare Parts.\n\nTotal: ${totals.totalFormatted}\n\nKind regards,\n${document.createdBy.name}${senderMobile}\nLavender Auto Spare Parts`,
+      subject: `Sales Quotation ${document.number} — Lavender Auto Spare Parts`,
+      text: `Hello ${document.customer?.name || "Customer"},\n\nPlease find attached Sales Quotation ${document.number} from Lavender Auto Spare Parts.\n\nTotal: ${totals.totalFormatted}\n\nKind regards,\n${document.createdBy.name}${senderMobile}\nLavender Auto Spare Parts`,
       attachments: [
         {
           filename: `${document.number}.pdf`,
@@ -254,19 +249,19 @@ export async function sendDocument(documentId: string): Promise<ActionResult> {
       data: {
         status: "SENT",
         sentAt: new Date(),
-        snapshotSupplierName: document.supplier?.name ?? null,
-        snapshotSupplierAddress: document.supplier?.address ?? null,
-        snapshotSupplierEmail: targetEmail,
-        snapshotSupplierPhone: document.supplier?.phone ?? null,
-        snapshotSupplierTaxId: document.supplier?.taxId ?? null,
+        snapshotCustomerName: document.customer?.name ?? null,
+        snapshotCustomerAddress: document.customer?.address ?? null,
+        snapshotCustomerEmail: targetEmail,
+        snapshotCustomerPhone: document.customer?.phone ?? null,
+        snapshotCustomerTaxId: document.customer?.taxId ?? null,
       },
     });
 
-    revalidatePath("/po");
-    revalidatePath(`/po/${documentId}`);
+    revalidatePath("/quotations");
+    revalidatePath(`/quotations/${documentId}`);
     return { success: true, id: documentId };
-  } catch (err) {
-    console.error("sendDocument error:", err);
-    return { success: false, error: "An unexpected error occurred while sending." };
+  } catch (err: unknown) {
+    console.error("sendQuotation error:", err);
+    return { success: false, error: "An unexpected error occurred while sending email." };
   }
 }

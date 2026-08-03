@@ -47,11 +47,11 @@ export default async function PoDetailPage({
 
   if (!doc) notFound();
 
-  const supplierName = doc.snapshotSupplierName || doc.supplier.name;
-  const supplierAddress = doc.snapshotSupplierAddress || doc.supplier.address;
-  const supplierPhone = doc.snapshotSupplierPhone || doc.supplier.phone;
-  const supplierEmail = doc.supplierEmail || doc.snapshotSupplierEmail || doc.supplier.email;
-  const supplierTaxId = doc.snapshotSupplierTaxId || doc.supplier.taxId;
+  const supplierName = doc.snapshotSupplierName || doc.supplier?.name || "Supplier";
+  const supplierAddress = doc.snapshotSupplierAddress || doc.supplier?.address;
+  const supplierPhone = doc.snapshotSupplierPhone || doc.supplier?.phone;
+  const supplierEmail = doc.supplierEmail || doc.snapshotSupplierEmail || doc.supplier?.email || null;
+  const supplierTaxId = doc.snapshotSupplierTaxId || doc.supplier?.taxId;
 
   const totals = computeTotals(
     doc.items.map((item: { qty: { toString(): string }; rate: { toString(): string }; taxPercent?: { toString(): string } }) => ({

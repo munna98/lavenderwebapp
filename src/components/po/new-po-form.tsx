@@ -292,14 +292,14 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
               <button
                 type="button"
                 onClick={addRow}
-                className="hidden sm:inline-flex items-center gap-1 text-xs font-medium cursor-pointer transition-colors hover:underline"
-                style={{ color: "var(--accent)" }}
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors"
+                style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
               >
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="12" y1="5" x2="12" y2="19" />
                   <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
-                Add row
+                Add Row
               </button>
             </div>
 
@@ -408,19 +408,14 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
                   <button
                     type="button"
                     onClick={openDrawerForNew}
-                    className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border text-sm font-semibold transition-all cursor-pointer hover:bg-surface-raised"
-                    style={{
-                      borderColor: "var(--border)",
-                      borderStyle: "dashed",
-                      color: "var(--accent)",
-                      background: "var(--surface)",
-                    }}
+                    className="w-full flex items-center justify-center gap-1.5 py-3 rounded-xl text-xs font-semibold cursor-pointer transition-colors"
+                    style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="12" y1="5" x2="12" y2="19" />
                       <line x1="5" y1="12" x2="19" y2="12" />
                     </svg>
-                    Add Line Item
+                    Add Row
                   </button>
                 </>
               )}
@@ -485,7 +480,7 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
                           <input
                             {...qtyProps}
                             ref={(e) => { qtyRegRef(e); setInputRef(idx, "qty", e); }}
-                            type="number" step="any" min="0.0001"
+                            type="number" step="any" placeholder="1"
                             onKeyDown={(e) => handleQtyKeyDown(e, idx)}
                             className="w-full px-2.5 py-1.5 rounded-md border text-sm text-right outline-none font-mono-nums focus:border-accent"
                             style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}
@@ -495,7 +490,7 @@ export default function NewPoForm({ suppliers, initialData }: Props) {
                           <input
                             {...rateProps}
                             ref={(e) => { rateRegRef(e); setInputRef(idx, "rate", e); }}
-                            type="number" step="any" min="0"
+                            type="number" step="any" placeholder="0.00"
                             onKeyDown={(e) => handleRateKeyDown(e, idx)}
                             className="w-full px-2.5 py-1.5 rounded-md border text-sm text-right outline-none font-mono-nums focus:border-accent"
                             style={{ borderColor: "var(--border)", background: "var(--surface)", color: "var(--foreground)" }}

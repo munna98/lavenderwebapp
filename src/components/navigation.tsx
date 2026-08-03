@@ -30,6 +30,7 @@ export default function Navigation({ user }: Props) {
     { href: "/po", label: "Purchase Orders" },
     { href: "/quotations", label: "Quotations" },
     { href: "/suppliers", label: "Suppliers" },
+    { href: "/customers", label: "Customers" },
     ...(user.role === "ADMIN" ? [{ href: "/settings/users", label: "Staff & Users" }] : []),
   ];
 

@@ -1,9 +1,9 @@
 import { Document, Page, Text, View, Image, StyleSheet } from "@react-pdf/renderer";
-import type { Document as PrismaDocument, Supplier, User, DocumentItem } from "@prisma/client";
+import type { Document as PrismaDocument, Customer, User, DocumentItem } from "@prisma/client";
 import path from "path";
 
 type DocumentWithRelations = PrismaDocument & {
-  supplier: Supplier | null;
+  customer: Customer | null;
   createdBy: User;
   items: DocumentItem[];
 };
@@ -189,12 +189,12 @@ const styles = StyleSheet.create({
   },
 });
 
-export default function PurchaseOrderPdf({ document: doc }: Props) {
-  const supplierName = doc.snapshotSupplierName || doc.supplier?.name || "Supplier";
-  const supplierAddress = doc.snapshotSupplierAddress || doc.supplier?.address;
-  const supplierPhone = doc.snapshotSupplierPhone || doc.supplier?.phone;
-  const supplierEmail = doc.supplierEmail || doc.snapshotSupplierEmail || doc.supplier?.email;
-  const supplierTaxId = doc.snapshotSupplierTaxId || doc.supplier?.taxId;
+export default function QuotationPdf({ document: doc }: Props) {
+  const customerName = doc.snapshotCustomerName || doc.customer?.name || "Cash Customer";
+  const customerAddress = doc.snapshotCustomerAddress || doc.customer?.address;
+  const customerPhone = doc.snapshotCustomerPhone || doc.customer?.phone;
+  const customerEmail = doc.customerEmail || doc.snapshotCustomerEmail || doc.customer?.email;
+  const customerTaxId = doc.snapshotCustomerTaxId || doc.customer?.taxId;
 
   const dateStr = (doc.sentAt || doc.createdAt).toLocaleDateString("en-GB", {
     day: "2-digit",
@@ -217,31 +217,31 @@ export default function PurchaseOrderPdf({ document: doc }: Props) {
     });
 
   return (
-    <Document title={`PO_${doc.number}`}>
+    <Document title={`Quotation_${doc.number}`}>
       <Page size="A4" style={styles.page}>
-        {/* Official Header Banner (Appears on every page) */}
+        {/* Official Header Banner */}
         <View style={styles.headerBannerContainer} fixed>
           <Image src={headerBannerPath} style={styles.headerBannerImage} />
         </View>
 
-        {/* Centered Document Title */}
+        {/* Centered Title */}
         <View style={styles.titleContainer}>
-          <Text style={styles.centerTitle}>PURCHASE ORDER</Text>
+          <Text style={styles.centerTitle}>SALES QUOTATION</Text>
         </View>
 
-        {/* Supplier & PO Details */}
+        {/* Customer & Quotation Details */}
         <View style={styles.addressGrid}>
           <View style={styles.addressColLeft}>
-            <Text style={styles.sectionLabel}>Supplier</Text>
-            <Text style={styles.partyName}>{supplierName}</Text>
-            {supplierAddress && <Text style={styles.addressText}>{supplierAddress}</Text>}
-            {supplierPhone && <Text style={styles.addressText}>Phone: {supplierPhone}</Text>}
-            {supplierEmail && <Text style={styles.addressText}>Email: {supplierEmail}</Text>}
-            {supplierTaxId && <Text style={styles.addressText}>Tax ID: {supplierTaxId}</Text>}
+            <Text style={styles.sectionLabel}>Customer</Text>
+            <Text style={styles.partyName}>{customerName}</Text>
+            {customerAddress && <Text style={styles.addressText}>{customerAddress}</Text>}
+            {customerPhone && <Text style={styles.addressText}>Phone: {customerPhone}</Text>}
+            {customerEmail && <Text style={styles.addressText}>Email: {customerEmail}</Text>}
+            {customerTaxId && <Text style={styles.addressText}>Tax ID: {customerTaxId}</Text>}
           </View>
 
           <View style={styles.addressColRight}>
-            <Text style={styles.sectionLabel}>PO Details</Text>
+            <Text style={styles.sectionLabel}>Quotation Details</Text>
             <Text style={styles.partyName}>{doc.number}</Text>
             <Text style={styles.addressText}>Date: {dateStr}</Text>
             <Text style={styles.addressText}>Issued By: Lavender Auto Spare Parts</Text>
@@ -277,9 +277,8 @@ export default function PurchaseOrderPdf({ document: doc }: Props) {
           })}
         </View>
 
-        {/* Non-Breaking Bottom Summary Section (Totals Box + Notes) */}
+        {/* Bottom Summary Section */}
         <View style={styles.summarySectionContainer} wrap={false}>
-          {/* Totals Summary Box (Subtotal + 5% VAT) */}
           <View style={styles.totalsContainer} wrap={false}>
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Subtotal:</Text>
@@ -298,13 +297,13 @@ export default function PurchaseOrderPdf({ document: doc }: Props) {
           {/* Notes & Instructions */}
           {doc.notes && (
             <View style={styles.notesSection} wrap={false}>
-              <Text style={styles.sectionLabel}>Notes & Instructions</Text>
+              <Text style={styles.sectionLabel}>Notes & Terms</Text>
               <Text style={styles.notesText}>{doc.notes}</Text>
             </View>
           )}
         </View>
 
-        {/* Official Footer Banner (Appears on every page) */}
+        {/* Official Footer Banner */}
         <View style={styles.footerBannerContainer} fixed>
           <Image src={footerBannerPath} style={styles.footerBannerImage} />
         </View>

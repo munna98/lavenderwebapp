@@ -49,8 +49,8 @@ export default async function EditPoPage({
 
   const initialData = {
     documentId: doc.id,
-    supplierId: doc.supplierId,
-    supplierEmail: doc.supplierEmail || doc.snapshotSupplierEmail || doc.supplier.email,
+    supplierId: doc.supplierId || "",
+    supplierEmail: doc.supplierEmail || doc.snapshotSupplierEmail || doc.supplier?.email || "",
     notes: doc.notes,
     customerName: doc.customerName,
     customerContact: doc.customerContact,

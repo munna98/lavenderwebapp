@@ -61,6 +61,22 @@ model Supplier {
   @@map("suppliers")
 }
 
+model Customer {
+  id               String   @id @default(uuid())
+  name             String
+  address          String?
+  phone            String?
+  email            String?
+  additionalEmails String? // Comma-separated additional email addresses for Quotation dispatch
+  taxId            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  documents Document[]
+
+  @@map("customers")
+}
+
 model Document {
   id     String         @id @default(uuid())
   type   DocumentType   @default(PO)
@@ -68,9 +84,14 @@ model Document {
   status DocumentStatus @default(DRAFT)
 
   // Live relations
-  supplierId    String
-  supplier      Supplier @relation(fields: [supplierId], references: [id])
-  supplierEmail String? // Custom email for this specific PO (overrides master supplier email)
+  supplierId    String?
+  supplier      Supplier? @relation(fields: [supplierId], references: [id])
+  supplierEmail String?   // Custom email for this specific PO (overrides master supplier email)
+
+  customerId    String?
+  customer      Customer? @relation(fields: [customerId], references: [id])
+  customerEmail String?   // Custom email for this specific Quotation (overrides master customer email)
+
   createdById   String
   createdBy     User     @relation(fields: [createdById], references: [id])
 
@@ -81,12 +102,18 @@ model Document {
   customerContact String?
 
   // Supplier snapshot — populated at send time to preserve historical accuracy
-  // even if the supplier's details change later
   snapshotSupplierName    String?
   snapshotSupplierAddress String?
   snapshotSupplierEmail   String?
   snapshotSupplierPhone   String?
   snapshotSupplierTaxId   String?
+
+  // Customer snapshot — populated at send time for Quotations
+  snapshotCustomerName    String?
+  snapshotCustomerAddress String?
+  snapshotCustomerEmail   String?
+  snapshotCustomerPhone   String?
+  snapshotCustomerTaxId   String?
 
   items DocumentItem[]
 
