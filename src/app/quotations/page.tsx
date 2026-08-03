@@ -38,10 +38,10 @@ export default async function QuotationsPage() {
     );
     const grandTotal = subtotal * 1.05;
 
-    const totalFormatted = `AED ${grandTotal.toLocaleString("en-US", {
+    const totalFormatted = grandTotal.toLocaleString("en-US", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    })}`;
+    });
 
     return {
       id: doc.id,

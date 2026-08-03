@@ -25,7 +25,7 @@ export default async function NewQuotationPage({
       <div className="mb-6">
         <h1 className="text-xl font-semibold tracking-tight">New Sales Quotation</h1>
         <p className="text-sm mt-0.5" style={{ color: "var(--muted-foreground)" }}>
-          Create a new quotation for client approval.
+          Create new sales quotation.
         </p>
       </div>
 
