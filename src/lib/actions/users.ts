@@ -17,9 +17,11 @@ const CreateUserSchema = z.object({
 
 const UpdateUserSchema = z.object({
   userId: z.string().uuid(),
+  name: z.string().min(1, "Name is required").optional(),
+  phone: z.string().optional().nullable(),
   role: z.enum(["ADMIN", "STAFF"]).optional(),
   isActive: z.boolean().optional(),
-  password: z.string().min(6).optional(),
+  password: z.string().min(6, "Password must be at least 6 characters").optional(),
 });
 
 export type ActionResult =
@@ -125,10 +127,12 @@ export async function createUser(formData: FormData): Promise<ActionResult> {
 }
 
 /**
- * Update a user's role, active status, or password. Admin only.
+ * Update a user's name, phone, role, active status, or password. Admin only.
  */
 export async function updateUser(data: {
   userId: string;
+  name?: string;
+  phone?: string | null;
   role?: "ADMIN" | "STAFF";
   isActive?: boolean;
   password?: string;
@@ -141,23 +145,27 @@ export async function updateUser(data: {
     return { success: false, error: issues[0]?.message ?? "Validation failed" };
   }
 
-  const { userId, role, isActive, password } = parsed.data;
+  const { userId, name, phone, role, isActive, password } = parsed.data;
 
   try {
     const adminClient = createAdminClient();
 
-    if (password) {
-      const { error: authError } = await adminClient.auth.admin.updateUserById(userId, {
-        password,
+    if (password || name || role || phone !== undefined) {
+      await adminClient.auth.admin.updateUserById(userId, {
+        ...(password && { password }),
+        user_metadata: {
+          ...(name && { name }),
+          ...(role && { role }),
+          ...(phone !== undefined && { phone: phone || undefined }),
+        },
       });
-      if (authError) {
-        return { success: false, error: authError.message };
-      }
     }
 
     await prisma.user.update({
       where: { id: userId },
       data: {
+        ...(name !== undefined && { name }),
+        ...(phone !== undefined && { phone: phone || null }),
         ...(role !== undefined && { role }),
         ...(isActive !== undefined && { isActive }),
       },
@@ -165,7 +173,8 @@ export async function updateUser(data: {
 
     revalidatePath("/settings/users");
     return { success: true, message: "User updated successfully." };
-  } catch {
+  } catch (err) {
+    console.error("updateUser error:", err);
     return { success: false, error: "Failed to update user." };
   }
 }

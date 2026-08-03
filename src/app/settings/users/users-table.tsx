@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import type { User } from "@prisma/client";
 import { createUser, updateUser } from "@/lib/actions/users";
 import Pagination from "@/components/ui/pagination";
@@ -220,14 +221,23 @@ export default function UsersTable({ users: initialUsers, showAddForm: externalS
                     <option value="STAFF">Staff</option>
                     <option value="ADMIN">Admin</option>
                   </select>
-                  <button
-                    onClick={() => handleToggleActive(user.id, user.isActive)}
-                    disabled={isPending}
-                    className="text-xs underline underline-offset-2 cursor-pointer disabled:opacity-40"
-                    style={{ color: "var(--muted-foreground)" }}
-                  >
-                    {user.isActive ? "Deactivate" : "Reactivate"}
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <Link
+                      href={`/settings/users/${user.id}/edit`}
+                      className="text-xs font-medium underline underline-offset-2 cursor-pointer"
+                      style={{ color: "var(--accent)" }}
+                    >
+                      Edit
+                    </Link>
+                    <button
+                      onClick={() => handleToggleActive(user.id, user.isActive)}
+                      disabled={isPending}
+                      className="text-xs underline underline-offset-2 cursor-pointer disabled:opacity-40"
+                      style={{ color: "var(--muted-foreground)" }}
+                    >
+                      {user.isActive ? "Deactivate" : "Reactivate"}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -296,7 +306,14 @@ export default function UsersTable({ users: initialUsers, showAddForm: externalS
                       {user.isActive ? "Active" : "Inactive"}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3 text-right space-x-3">
+                    <Link
+                      href={`/settings/users/${user.id}/edit`}
+                      className="text-xs font-medium underline underline-offset-2 cursor-pointer"
+                      style={{ color: "var(--accent)" }}
+                    >
+                      Edit
+                    </Link>
                     <button
                       onClick={() => handleToggleActive(user.id, user.isActive)}
                       disabled={isPending}
