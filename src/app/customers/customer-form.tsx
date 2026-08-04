@@ -87,7 +87,7 @@ export default function CustomerForm({ customer, action, submitLabel = "Save cus
           name="name"
           type="text"
           required
-          placeholder="e.g. Al Futtaim Motors"
+          placeholder="e.g. Munavir T"
           defaultValue={customer?.name}
           disabled={isPending}
           className="w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-all focus:border-accent"
@@ -122,7 +122,7 @@ export default function CustomerForm({ customer, action, submitLabel = "Save cus
                 type="email"
                 value={emailVal}
                 onChange={(e) => handleEmailChange(idx, e.target.value)}
-                placeholder={idx === 0 ? "Primary Email (e.g. info@customer.com)" : `Additional Email #${idx + 1}`}
+                placeholder={idx === 0 ? "info@customer.com" : `Additional Email #${idx + 1}`}
                 disabled={isPending}
                 className="w-full px-3 py-2 rounded-lg border text-sm outline-none transition-all focus:border-accent"
                 style={{

@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default async function CustomersPage() {
   // Temporary redirect for demo purpose
-  redirect("/coming-soon");
+  // redirect("/coming-soon");
 
   const auth = await requireAuth();
 
