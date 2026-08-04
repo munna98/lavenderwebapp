@@ -204,6 +204,7 @@ export default function QuotationsClient({ quotations, customers }: Props) {
             <tr style={{ background: "var(--surface-raised)", borderBottom: "1px solid var(--border)" }}>
               <th className="text-left px-4 py-3 font-medium text-xs uppercase" style={{ color: "var(--muted-foreground)" }}>Quotation #</th>
               <th className="text-left px-4 py-3 font-medium text-xs uppercase" style={{ color: "var(--muted-foreground)" }}>Customer</th>
+              <th className="text-left px-4 py-3 font-medium text-xs uppercase hidden lg:table-cell" style={{ color: "var(--muted-foreground)" }}>Reference</th>
               <th className="text-left px-4 py-3 font-medium text-xs uppercase hidden md:table-cell" style={{ color: "var(--muted-foreground)" }}>Created By</th>
               <th className="text-left px-4 py-3 font-medium text-xs uppercase hidden sm:table-cell" style={{ color: "var(--muted-foreground)" }}>Date</th>
               <th className="text-left px-4 py-3 font-medium text-xs uppercase" style={{ color: "var(--muted-foreground)" }}>Status</th>
@@ -213,7 +214,7 @@ export default function QuotationsClient({ quotations, customers }: Props) {
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-sm" style={{ color: "var(--muted-foreground)" }}>
+                <td colSpan={7} className="px-4 py-8 text-center text-sm" style={{ color: "var(--muted-foreground)" }}>
                   No sales quotations found matching your criteria.
                 </td>
               </tr>
@@ -241,7 +242,10 @@ export default function QuotationsClient({ quotations, customers }: Props) {
                     </Link>
                   </td>
                   <td className="px-4 py-3 font-medium">
-                    {item.customer?.name || item.customerName || "Cash Customer"}
+                    {item.customer?.name || "Cash Customer"}
+                  </td>
+                  <td className="px-4 py-3 hidden lg:table-cell text-sm" style={{ color: "var(--muted-foreground)" }}>
+                    {item.customerName || "—"}
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell" style={{ color: "var(--muted-foreground)" }}>
                     {item.createdBy.name}

@@ -181,6 +181,7 @@ export default function PoListClient({ pos, suppliers }: Props) {
             <tr style={{ background: "var(--surface-raised)", borderBottom: "1px solid var(--border)" }}>
               <th className="text-left px-4 py-3 font-medium text-xs uppercase" style={{ color: "var(--muted-foreground)" }}>PO #</th>
               <th className="text-left px-4 py-3 font-medium text-xs uppercase" style={{ color: "var(--muted-foreground)" }}>Supplier</th>
+              <th className="text-left px-4 py-3 font-medium text-xs uppercase hidden lg:table-cell" style={{ color: "var(--muted-foreground)" }}>Reference</th>
               <th className="text-left px-4 py-3 font-medium text-xs uppercase hidden md:table-cell" style={{ color: "var(--muted-foreground)" }}>Created By</th>
               <th className="text-left px-4 py-3 font-medium text-xs uppercase hidden sm:table-cell" style={{ color: "var(--muted-foreground)" }}>Date</th>
               <th className="text-left px-4 py-3 font-medium text-xs uppercase" style={{ color: "var(--muted-foreground)" }}>Status</th>
@@ -190,7 +191,7 @@ export default function PoListClient({ pos, suppliers }: Props) {
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-sm" style={{ color: "var(--muted-foreground)" }}>
+                <td colSpan={7} className="px-4 py-8 text-center text-sm" style={{ color: "var(--muted-foreground)" }}>
                   No purchase orders found matching your criteria.
                 </td>
               </tr>
@@ -218,14 +219,10 @@ export default function PoListClient({ pos, suppliers }: Props) {
                     </Link>
                   </td>
                   <td className="px-4 py-3 font-medium">
-                    <div>
-                      <p>{item.supplier?.name || "—"}</p>
-                      {item.customerName && (
-                        <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>
-                          Ref: {item.customerName}
-                        </p>
-                      )}
-                    </div>
+                    {item.supplier?.name || "—"}
+                  </td>
+                  <td className="px-4 py-3 hidden lg:table-cell text-sm" style={{ color: "var(--muted-foreground)" }}>
+                    {item.customerName || "—"}
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell" style={{ color: "var(--muted-foreground)" }}>
                     {item.createdBy.name}
