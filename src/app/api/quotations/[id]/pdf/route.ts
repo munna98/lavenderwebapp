@@ -35,8 +35,11 @@ export async function GET(
       }))
     );
 
+    const hidePartNumberParam = request.nextUrl.searchParams.get("hidePartNumber");
+    const showPartNumber = hidePartNumberParam === "false";
+
     const pdfBuffer = await renderToBuffer(
-      createElement(QuotationPdf, { document: doc as any, totals }) as unknown as React.ReactElement<any>
+      createElement(QuotationPdf, { document: doc as any, totals, showPartNumber }) as unknown as React.ReactElement<any>
     );
 
     return new NextResponse(new Uint8Array(pdfBuffer), {

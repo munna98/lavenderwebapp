@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { computeTotals } from "@/lib/utils/totals";
 import { notFound } from "next/navigation";
 import QuotationActions from "./quotation-actions";
+import ExpandableNotes from "@/components/ui/expandable-notes";
 import type { Metadata } from "next";
 
 export async function generateMetadata({
@@ -135,7 +136,7 @@ export default async function QuotationDetailPage({
               <h2 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--muted-foreground)" }}>
                 Notes & Terms
               </h2>
-              <p className="text-sm whitespace-pre-line" style={{ color: "var(--foreground)" }}>{doc.notes}</p>
+              <ExpandableNotes notes={doc.notes} />
             </div>
           )}
         </div>

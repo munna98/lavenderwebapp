@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import Decimal from "decimal.js";
 import { computeTotals } from "@/lib/utils/totals";
-import { CreateDocumentSchema } from "@/lib/schemas/documents";
+import { CreateQuotationSchema } from "@/lib/schemas/documents";
 
 export type ActionResult =
   | { success: true; id: string }
@@ -29,7 +29,7 @@ async function generateQuotationNumber(
 export async function createQuotation(data: unknown): Promise<ActionResult> {
   const auth = await requireAuth();
 
-  const parsed = CreateDocumentSchema.safeParse(data);
+  const parsed = CreateQuotationSchema.safeParse(data);
   if (!parsed.success) {
     const issues = parsed.error.issues || [];
     return {
@@ -101,7 +101,7 @@ export async function updateQuotation(
     return { success: false, error: "Only DRAFT quotations can be edited." };
   }
 
-  const parsed = CreateDocumentSchema.safeParse(data);
+  const parsed = CreateQuotationSchema.safeParse(data);
   if (!parsed.success) {
     const issues = parsed.error.issues || [];
     return {
@@ -181,7 +181,10 @@ export async function cancelQuotation(documentId: string): Promise<ActionResult>
   return { success: true, id: documentId };
 }
 
-export async function sendQuotation(documentId: string): Promise<ActionResult> {
+export async function sendQuotation(
+  documentId: string,
+  options?: { hidePartNumber?: boolean }
+): Promise<ActionResult> {
   await requireAuth();
 
   const document = await prisma.document.findUnique({
@@ -203,6 +206,8 @@ export async function sendQuotation(documentId: string): Promise<ActionResult> {
     return { success: false, error: "Customer has no email address specified for this quotation." };
   }
 
+  const showPartNumber = options?.hidePartNumber === false;
+
   try {
     const { renderToBuffer } = await import("@react-pdf/renderer");
     const { default: QuotationPdf } = await import("@/components/pdf/quotation-pdf");
@@ -218,7 +223,7 @@ export async function sendQuotation(documentId: string): Promise<ActionResult> {
     );
 
     const pdfBuffer = await renderToBuffer(
-      createElement(QuotationPdf, { document: document as any, totals }) as unknown as React.ReactElement<any>
+      createElement(QuotationPdf, { document: document as any, totals, showPartNumber }) as unknown as React.ReactElement<any>
     );
 
     const resend = new Resend(process.env.RESEND_API_KEY);

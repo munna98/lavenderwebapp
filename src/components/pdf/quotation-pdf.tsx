@@ -20,6 +20,7 @@ type Totals = {
 type Props = {
   document: DocumentWithRelations;
   totals?: Totals;
+  showPartNumber?: boolean;
 };
 
 const styles = StyleSheet.create({
@@ -175,6 +176,20 @@ const styles = StyleSheet.create({
     lineHeight: 1.4,
   },
 
+  footnoteSection: {
+    marginTop: 14,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: "#E2E0D8",
+    alignItems: "center",
+  },
+  footnoteText: {
+    fontSize: 8,
+    fontStyle: "italic",
+    color: "#555555",
+    textAlign: "center",
+  },
+
   footerBannerContainer: {
     position: "absolute",
     bottom: 16,
@@ -189,7 +204,7 @@ const styles = StyleSheet.create({
   },
 });
 
-export default function QuotationPdf({ document: doc }: Props) {
+export default function QuotationPdf({ document: doc, showPartNumber = false }: Props) {
   const customerName = doc.snapshotCustomerName || doc.customer?.name || "Cash Customer";
   const customerAddress = doc.snapshotCustomerAddress || doc.customer?.address;
   const customerPhone = doc.snapshotCustomerPhone || doc.customer?.phone;
@@ -215,6 +230,8 @@ export default function QuotationPdf({ document: doc }: Props) {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
+
+  const colDescStyle = showPartNumber ? styles.colDesc : [styles.colDesc, { width: "70%" }];
 
   return (
     <Document title={`Quotation_${doc.number}`}>
@@ -255,8 +272,8 @@ export default function QuotationPdf({ document: doc }: Props) {
         <View style={styles.table}>
           <View style={styles.tableHeader} fixed>
             <Text style={styles.colSlNo}>#</Text>
-            <Text style={styles.colPartNo}>Part #</Text>
-            <Text style={styles.colDesc}>Description</Text>
+            {showPartNumber && <Text style={styles.colPartNo}>Part #</Text>}
+            <Text style={colDescStyle}>Description</Text>
             <Text style={styles.colQty}>Qty</Text>
             <Text style={styles.colRate}>Rate</Text>
           </View>
@@ -268,8 +285,8 @@ export default function QuotationPdf({ document: doc }: Props) {
             return (
               <View key={item.id || idx} style={styles.tableRow}>
                 <Text style={styles.colSlNo}>{idx + 1}</Text>
-                <Text style={styles.colPartNo}>{item.partNumber}</Text>
-                <Text style={styles.colDesc}>{item.name || "—"}</Text>
+                {showPartNumber && <Text style={styles.colPartNo}>{item.partNumber || "—"}</Text>}
+                <Text style={colDescStyle}>{item.name || "—"}</Text>
                 <Text style={styles.colQty}>{qty.toString()}</Text>
                 <Text style={styles.colRate}>{fmt(rate)}</Text>
               </View>
@@ -301,6 +318,13 @@ export default function QuotationPdf({ document: doc }: Props) {
               <Text style={styles.notesText}>{doc.notes}</Text>
             </View>
           )}
+
+          {/* Footnote */}
+          <View style={styles.footnoteSection} wrap={false}>
+            <Text style={styles.footnoteText}>
+              Thank you for choosing Lavender Auto Spare Parts. We appreciate your business and look forward to serving you.
+            </Text>
+          </View>
         </View>
 
         {/* Official Footer Banner */}

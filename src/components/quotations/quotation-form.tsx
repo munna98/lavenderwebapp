@@ -4,7 +4,7 @@ import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTransition, useRef, useState } from "react";
 import { createQuotation, updateQuotation, type ActionResult } from "@/lib/actions/quotations";
-import { CreateDocumentSchema, type CreateDocumentInput } from "@/lib/schemas/documents";
+import { CreateQuotationSchema, type CreateQuotationInput } from "@/lib/schemas/documents";
 import type { Customer } from "@prisma/client";
 import SummaryRail from "@/components/po/summary-rail";
 import CustomerCombobox from "./customer-combobox";
@@ -21,7 +21,7 @@ type Props = {
     notes?: string | null;
     customerName?: string | null;
     items: Array<{
-      partNumber: string;
+      partNumber?: string | null;
       name?: string | null;
       qty: number | string;
       rate: number | string;
@@ -29,6 +29,11 @@ type Props = {
     }>;
   };
 };
+
+export const DEFAULT_QUOTATION_NOTES = `* This quotation is valid for 7 days from the date of issue.
+* Prices are subject to stock availability and supplier confirmation.
+* Any changes in price or product availability will be communicated before order confirmation.
+* Special order and non-stock items may require advance payment and are non-returnable unless supplied incorrectly or found to be defective.`;
 
 export default function QuotationForm({ customers, initialData }: Props) {
   const [isPending, startTransition] = useTransition();
@@ -39,16 +44,16 @@ export default function QuotationForm({ customers, initialData }: Props) {
   // Default to Cash Customer if available and no initialData provided
   const defaultCustomerId = initialData?.customerId || customers.find((c) => c.name.toLowerCase().includes("cash"))?.id || customers[0]?.id || "";
 
-  const form = useForm<CreateDocumentInput>({
-    resolver: zodResolver(CreateDocumentSchema),
+  const form = useForm<CreateQuotationInput>({
+    resolver: zodResolver(CreateQuotationSchema),
     defaultValues: {
       supplierId: defaultCustomerId,
       supplierEmail: initialData?.customerEmail || customers.find((c) => c.id === defaultCustomerId)?.email || "",
-      notes: initialData?.notes || "",
+      notes: initialData?.notes !== undefined && initialData?.notes !== null ? initialData.notes : DEFAULT_QUOTATION_NOTES,
       customerName: initialData?.customerName || "",
       items: initialData?.items?.length
         ? initialData.items.map((i) => ({
-            partNumber: i.partNumber,
+            partNumber: i.partNumber || "",
             name: i.name || "",
             qty: Number(i.qty),
             rate: Number(i.rate),
@@ -119,10 +124,10 @@ export default function QuotationForm({ customers, initialData }: Props) {
   function handleRateKeyDown(e: React.KeyboardEvent<HTMLInputElement>, idx: number) {
     if (e.key === "Enter") {
       e.preventDefault();
-      const currentPartNo = form.getValues(`items.${idx}.partNumber`);
-      if (currentPartNo && currentPartNo.trim().length > 0) {
+      const currentName = form.getValues(`items.${idx}.name`);
+      if (currentName && currentName.trim().length > 0) {
         append({ partNumber: "", name: "", qty: 1, rate: 0, taxPercent: 0 });
-        setTimeout(() => focusInput(idx + 1, "partNumber"), 50);
+        setTimeout(() => focusInput(idx + 1, "name"), 50);
       } else {
         if (fields.length > 1) remove(idx);
         setTimeout(() => form.handleSubmit(handleSubmit)(), 50);
@@ -130,7 +135,7 @@ export default function QuotationForm({ customers, initialData }: Props) {
     }
   }
 
-  function handleSubmit(data: CreateDocumentInput) {
+  function handleSubmit(data: CreateQuotationInput) {
     setServerError(null);
     startTransition(async () => {
       let result: ActionResult;
@@ -230,8 +235,8 @@ export default function QuotationForm({ customers, initialData }: Props) {
                 <thead>
                   <tr style={{ background: "var(--surface-raised)", borderBottom: "1px solid var(--border)" }}>
                     <th className="text-center px-2 py-2.5 text-xs font-medium" style={{ color: "var(--muted-foreground)", width: "6%" }}>#</th>
-                    <th className="text-left px-3 py-2.5 text-xs font-medium" style={{ color: "var(--muted-foreground)", width: "24%" }}>Part # <span style={{ color: "var(--brass)" }}>*</span></th>
-                    <th className="text-left px-3 py-2.5 text-xs font-medium" style={{ color: "var(--muted-foreground)", width: "32%" }}>Description</th>
+                    <th className="text-left px-3 py-2.5 text-xs font-medium" style={{ color: "var(--muted-foreground)", width: "24%" }}>Part #</th>
+                    <th className="text-left px-3 py-2.5 text-xs font-medium" style={{ color: "var(--muted-foreground)", width: "32%" }}>Description <span style={{ color: "var(--brass)" }}>*</span></th>
                     <th className="text-right px-3 py-2.5 text-xs font-medium" style={{ color: "var(--muted-foreground)", width: "11%" }}>Qty</th>
                     <th className="text-right px-3 py-2.5 text-xs font-medium" style={{ color: "var(--muted-foreground)", width: "13%" }}>Rate</th>
                     <th className="text-right px-3 py-2.5 text-xs font-medium" style={{ color: "var(--muted-foreground)", width: "10%" }}>Total</th>
@@ -458,7 +463,7 @@ export default function QuotationForm({ customers, initialData }: Props) {
             </label>
             <textarea
               id="notes"
-              rows={3}
+              rows={5}
               placeholder="e.g. Validity period, payment terms, or special instructions..."
               {...form.register("notes")}
               className="w-full px-3 py-2.5 rounded-lg border text-sm outline-none resize-none transition-all focus:border-accent"
@@ -493,6 +498,8 @@ export default function QuotationForm({ customers, initialData }: Props) {
             rate: Number(watchedItems[activeDrawerIndex]?.rate || 0),
           }}
           itemIndex={activeDrawerIndex}
+          requirePartNumber={false}
+          requireName={true}
           onSave={(updated) => {
             form.setValue(`items.${activeDrawerIndex}.partNumber`, updated.partNumber);
             form.setValue(`items.${activeDrawerIndex}.name`, updated.name);

@@ -14,11 +14,22 @@ type Props = {
   item: DrawerItem | null;
   itemIndex: number; // 0-indexed item number (e.g. 0 for #1, 1 for #2)
   isNew?: boolean;   // true when adding a new item, false when editing
+  requirePartNumber?: boolean;
+  requireName?: boolean;
   onSave: (item: DrawerItem, index: number | null) => void;
   onClose: () => void;
 };
 
-export default function ItemDrawer({ isOpen, item, itemIndex, isNew = false, onSave, onClose }: Props) {
+export default function ItemDrawer({
+  isOpen,
+  item,
+  itemIndex,
+  isNew = false,
+  requirePartNumber = true,
+  requireName = false,
+  onSave,
+  onClose,
+}: Props) {
   const [partNumber, setPartNumber] = useState("");
   const [name, setName] = useState("");
   const [qty, setQty] = useState("1");
@@ -26,6 +37,7 @@ export default function ItemDrawer({ isOpen, item, itemIndex, isNew = false, onS
   const [error, setError] = useState<string | null>(null);
 
   const partNumberRef = useRef<HTMLInputElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
 
   // Sync state when drawer opens
   useEffect(() => {
@@ -35,10 +47,16 @@ export default function ItemDrawer({ isOpen, item, itemIndex, isNew = false, onS
       setQty(item?.qty?.toString() ?? "1");
       setRate(item?.rate ? item.rate.toString() : "");
       setError(null);
-      // Focus part number after animation
-      setTimeout(() => partNumberRef.current?.focus(), 120);
+      // Focus field after animation
+      setTimeout(() => {
+        if (requirePartNumber) {
+          partNumberRef.current?.focus();
+        } else {
+          nameRef.current?.focus();
+        }
+      }, 120);
     }
-  }, [isOpen, item]);
+  }, [isOpen, item, requirePartNumber]);
 
   // ESC key closes
   useEffect(() => {
@@ -57,9 +75,15 @@ export default function ItemDrawer({ isOpen, item, itemIndex, isNew = false, onS
 
   function handleSave() {
     const cleanPartNo = partNumber.trim().replace(/\s+/g, "");
-    if (!cleanPartNo) {
+    if (requirePartNumber && !cleanPartNo) {
       setError("Part number is required.");
       partNumberRef.current?.focus();
+      return;
+    }
+    const cleanName = name.trim();
+    if (requireName && !cleanName) {
+      setError("Description is required.");
+      nameRef.current?.focus();
       return;
     }
     const parsedQty = parseFloat(qty);
@@ -72,7 +96,7 @@ export default function ItemDrawer({ isOpen, item, itemIndex, isNew = false, onS
     onSave(
       {
         partNumber: cleanPartNo,
-        name: name.trim(),
+        name: cleanName,
         qty: parsedQty,
         rate: isNaN(parsedRate) ? 0 : parsedRate,
       },
@@ -147,7 +171,7 @@ export default function ItemDrawer({ isOpen, item, itemIndex, isNew = false, onS
           {/* Part Number */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: "var(--muted-foreground)" }}>
-              Part # <span style={{ color: "var(--brass)" }}>*</span>
+              Part # {requirePartNumber ? <span style={{ color: "var(--brass)" }}>*</span> : <span className="font-normal lowercase" style={{ color: "var(--muted-foreground-soft)" }}>(optional)</span>}
             </label>
             <input
               ref={partNumberRef}
@@ -163,9 +187,10 @@ export default function ItemDrawer({ isOpen, item, itemIndex, isNew = false, onS
           {/* Description */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: "var(--muted-foreground)" }}>
-              Description <span className="font-normal lowercase" style={{ color: "var(--muted-foreground-soft)" }}>(optional)</span>
+              Description {requireName ? <span style={{ color: "var(--brass)" }}>*</span> : <span className="font-normal lowercase" style={{ color: "var(--muted-foreground-soft)" }}>(optional)</span>}
             </label>
             <input
+              ref={nameRef}
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
