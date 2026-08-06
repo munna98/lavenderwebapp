@@ -10,13 +10,11 @@ export const metadata: Metadata = {
 };
 
 export default async function QuotationsPage() {
-  // Temporary redirect for demo purpose
-  redirect("/coming-soon");
 
   await requireAuth();
 
   const [documents, customers] = await Promise.all([
-    prisma.document.findMany({
+    prisma.document.findMany({  
       where: { type: "QUOTATION" },
       orderBy: { createdAt: "desc" },
       include: {
