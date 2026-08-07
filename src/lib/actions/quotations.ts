@@ -181,6 +181,46 @@ export async function cancelQuotation(documentId: string): Promise<ActionResult>
   return { success: true, id: documentId };
 }
 
+export async function markQuotationSent(
+  documentId: string,
+  phoneOverride?: string
+): Promise<ActionResult> {
+  await requireAuth();
+
+  const document = await prisma.document.findUnique({
+    where: { id: documentId },
+    include: {
+      customer: true,
+    },
+  });
+
+  if (!document) return { success: false, error: "Quotation not found." };
+
+  try {
+    const targetPhone = phoneOverride || document.snapshotCustomerPhone || document.customer?.phone || null;
+
+    await prisma.document.update({
+      where: { id: documentId },
+      data: {
+        status: "SENT",
+        sentAt: new Date(),
+        snapshotCustomerName: document.customer?.name ?? document.snapshotCustomerName ?? null,
+        snapshotCustomerAddress: document.customer?.address ?? document.snapshotCustomerAddress ?? null,
+        snapshotCustomerEmail: document.customer?.email ?? document.snapshotCustomerEmail ?? null,
+        snapshotCustomerPhone: targetPhone,
+        snapshotCustomerTaxId: document.customer?.taxId ?? document.snapshotCustomerTaxId ?? null,
+      },
+    });
+
+    revalidatePath("/quotations");
+    revalidatePath(`/quotations/${documentId}`);
+    return { success: true, id: documentId };
+  } catch (err: unknown) {
+    console.error("markQuotationSent error:", err);
+    return { success: false, error: "Failed to update quotation status." };
+  }
+}
+
 export async function sendQuotation(
   documentId: string,
   options?: { hidePartNumber?: boolean }

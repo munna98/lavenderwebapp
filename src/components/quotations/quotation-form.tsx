@@ -18,6 +18,7 @@ type Props = {
     documentId: string;
     customerId: string;
     customerEmail?: string | null;
+    customerContact?: string | null;
     notes?: string | null;
     customerName?: string | null;
     items: Array<{
@@ -49,6 +50,7 @@ export default function QuotationForm({ customers, initialData }: Props) {
     defaultValues: {
       supplierId: defaultCustomerId,
       supplierEmail: initialData?.customerEmail || customers.find((c) => c.id === defaultCustomerId)?.email || "",
+      customerContact: initialData?.customerContact || customers.find((c) => c.id === defaultCustomerId)?.phone || "",
       notes: initialData?.notes !== undefined && initialData?.notes !== null ? initialData.notes : DEFAULT_QUOTATION_NOTES,
       customerName: initialData?.customerName || "",
       items: initialData?.items?.length
@@ -177,8 +179,9 @@ export default function QuotationForm({ customers, initialData }: Props) {
                 <CustomerCombobox
                   customers={customers}
                   selectedCustomerId={field.value}
-                  onSelect={(id, email) => {
+                  onSelect={(id, email, phone) => {
                     field.onChange(id);
+                    if (phone) form.setValue("customerContact", phone);
                     if (email) form.setValue("supplierEmail", email);
                   }}
                   error={fieldState.error?.message}
@@ -188,18 +191,18 @@ export default function QuotationForm({ customers, initialData }: Props) {
 
             <div>
               <label
-                htmlFor="customerEmail"
+                htmlFor="customerContact"
                 className="block text-sm font-medium mb-1.5"
                 style={{ color: "var(--foreground)" }}
               >
-                Email Address for Quotation
+                WhatsApp Number for Quotation
               </label>
               <input
-                id="customerEmail"
-                type="email"
-                placeholder="Leave empty to use customer default"
-                {...form.register("supplierEmail")}
-                className="w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-all focus:border-accent"
+                id="customerContact"
+                type="text"
+                placeholder="e.g. 0501234567 or 971501234567"
+                {...form.register("customerContact")}
+                className="w-full px-3 py-2.5 rounded-lg border text-sm outline-none font-mono-nums transition-all focus:border-accent"
                 style={{
                   background: "var(--surface)",
                   borderColor: "var(--border)",

@@ -99,8 +99,11 @@ export default async function QuotationDetailPage({
 
         <QuotationActions
           documentId={doc.id}
+          docNumber={doc.number}
           status={doc.status}
-          customerEmail={customerEmail}
+          customerName={customerName}
+          customerPhone={customerPhone || null}
+          totalFormatted={totals.totalFormatted}
           canCancel={canCancel}
           canEdit={canEdit}
         />

@@ -6,7 +6,7 @@ import type { Customer } from "@prisma/client";
 type Props = {
   customers: Customer[];
   selectedCustomerId: string;
-  onSelect: (customerId: string, customerEmail?: string) => void;
+  onSelect: (customerId: string, customerEmail?: string, customerPhone?: string) => void;
   error?: string;
   onEnterNext?: () => void;
 };
@@ -46,7 +46,7 @@ export default function CustomerCombobox({
   }, []);
 
   function handleSelect(customer: Customer) {
-    onSelect(customer.id, customer.email ?? undefined);
+    onSelect(customer.id, customer.email ?? undefined, customer.phone ?? undefined);
     setOpen(false);
     setQuery("");
     if (onEnterNext) {

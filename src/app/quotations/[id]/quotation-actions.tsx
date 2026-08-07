@@ -1,41 +1,87 @@
 "use client";
 
 import { useTransition, useState } from "react";
-import { sendQuotation, cancelQuotation } from "@/lib/actions/quotations";
+import { markQuotationSent, cancelQuotation } from "@/lib/actions/quotations";
 import Link from "next/link";
 import { toast } from "sonner";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
 
 type Props = {
   documentId: string;
+  docNumber: string;
   status: "DRAFT" | "SENT" | "CANCELLED";
-  customerEmail: string | null;
+  customerName: string;
+  customerPhone: string | null;
+  totalFormatted: string;
   canCancel: boolean;
   canEdit?: boolean;
 };
 
-export default function QuotationActions({ documentId, status, customerEmail, canCancel, canEdit = true }: Props) {
+function sanitizePhone(rawPhone: string): string {
+  let cleaned = rawPhone.replace(/[^\d+]/g, "");
+  if (cleaned.startsWith("+")) {
+    cleaned = cleaned.substring(1);
+  }
+  // Convert local UAE number format 05xxxxxxxx -> 9715xxxxxxxx
+  if (cleaned.startsWith("05") && cleaned.length === 10) {
+    cleaned = "971" + cleaned.substring(1);
+  }
+  return cleaned;
+}
+
+export default function QuotationActions({
+  documentId,
+  docNumber,
+  status,
+  customerName,
+  customerPhone,
+  totalFormatted,
+  canCancel,
+  canEdit = true,
+}: Props) {
   const [isPending, startTransition] = useTransition();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const [showSendDialog, setShowSendDialog] = useState(false);
+  const [showWhatsAppDialog, setShowWhatsAppDialog] = useState(false);
   const [hidePartNumber, setHidePartNumber] = useState(true);
 
-  function handleSendClick() {
-    if (!customerEmail) {
-      toast.error("Customer email address is missing.");
-      return;
-    }
-    setShowSendDialog(true);
+  function handleWhatsAppClick() {
+    setShowWhatsAppDialog(true);
   }
 
-  function handleSendConfirm() {
+  function handleWhatsAppConfirm() {
+    const rawPhone = customerPhone || "";
+    const cleanPhone = sanitizePhone(rawPhone);
+
     startTransition(async () => {
-      const res = await sendQuotation(documentId, { hidePartNumber });
-      setShowSendDialog(false);
+      // 1. Mark document as SENT in DB and capture snapshot
+      const res = await markQuotationSent(documentId, rawPhone);
+      setShowWhatsAppDialog(false);
+
       if (res.success) {
-        toast.success("Sales Quotation email sent to customer!");
+        toast.success("Quotation marked as Sent!");
+
+        // 2. Trigger PDF download in background
+        const pdfUrl = `/api/quotations/${documentId}/pdf?hidePartNumber=${hidePartNumber}`;
+        const downloadLink = document.createElement("a");
+        downloadLink.href = pdfUrl;
+        downloadLink.download = `${docNumber}.pdf`;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+
+        // 3. Construct WhatsApp Message text
+        const messageText = `Hello ${customerName},\n\nPlease find Sales Quotation ${docNumber} from Lavender Auto Spare Parts.\n\nTotal: ${totalFormatted}\n\nKind regards,\nLavender Auto Spare Parts`;
+
+        // 4. Launch WhatsApp Web / Mobile App in a new tab
+        const waUrl = cleanPhone
+          ? `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(messageText)}`
+          : `https://api.whatsapp.com/send?text=${encodeURIComponent(messageText)}`;
+
+        setTimeout(() => {
+          window.open(waUrl, "_blank");
+        }, 300);
       } else {
-        toast.error(res.error ?? "Failed to send Sales Quotation email.");
+        toast.error(res.error ?? "Failed to update Sales Quotation status.");
       }
     });
   }
@@ -111,24 +157,23 @@ export default function QuotationActions({ documentId, status, customerEmail, ca
           <span className="hidden sm:inline">Download PDF</span>
         </a>
 
-        {/* Send via Email button */}
+        {/* Send via WhatsApp button */}
         {status === "DRAFT" && (
           <button
-            id="send-quotation-btn"
-            onClick={handleSendClick}
-            disabled={isPending || !customerEmail}
-            className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer transition-colors border-0 disabled:opacity-50"
+            id="send-whatsapp-btn"
+            onClick={handleWhatsAppClick}
+            disabled={isPending}
+            className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer transition-colors border-0 disabled:opacity-50 shadow-xs"
             style={{
-              background: "var(--accent)",
+              background: "#25D366",
               color: "#fff",
             }}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="22" y1="2" x2="11" y2="13" />
-              <polygon points="22 2 15 22 11 13 2 9 22 2" />
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l.2.321-1.157 4.225 4.321-1.133.379.254z" />
             </svg>
-            <span className="sm:hidden">{isPending ? "Sending…" : "Send"}</span>
-            <span className="hidden sm:inline">{isPending ? "Sending…" : "Send via Email"}</span>
+            <span className="sm:hidden">{isPending ? "Launching…" : "WhatsApp"}</span>
+            <span className="hidden sm:inline">{isPending ? "Launching…" : "Send via WhatsApp"}</span>
           </button>
         )}
 
@@ -164,25 +209,26 @@ export default function QuotationActions({ documentId, status, customerEmail, ca
         </a>
       </div>
 
-      {/* Confirmation Modal Dialog for Send Email */}
+      {/* Confirmation Modal Dialog for Send WhatsApp */}
       <ConfirmDialog
-        isOpen={showSendDialog}
-        title="Send Sales Quotation Email"
+        isOpen={showWhatsAppDialog}
+        title="Send Quotation via WhatsApp"
         description={
           <>
-            Are you sure you want to send this sales quotation email to{" "}
+            Are you sure you want to send this quotation via WhatsApp to{" "}
             <strong style={{ color: "var(--accent)" }}>
-              {customerEmail || "the customer"}
+              {customerName}
             </strong>
-            ? The PDF document will be attached.
+            {customerPhone ? ` (${customerPhone})` : ""}? Clicking confirm will download{" "}
+            <strong>{docNumber}.pdf</strong>, mark status as <strong>Sent</strong>, and open WhatsApp.
           </>
         }
-        confirmLabel="Yes, Send Email"
+        confirmLabel="Launch WhatsApp"
         cancelLabel="Cancel"
         variant="default"
         isPending={isPending}
-        onConfirm={handleSendConfirm}
-        onClose={() => setShowSendDialog(false)}
+        onConfirm={handleWhatsAppConfirm}
+        onClose={() => setShowWhatsAppDialog(false)}
       />
 
       {/* Confirmation Modal Dialog for Cancel Quotation */}

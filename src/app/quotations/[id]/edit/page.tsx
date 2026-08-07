@@ -35,6 +35,7 @@ export default async function EditQuotationPage({
     documentId: doc.id,
     customerId: doc.customerId || "",
     customerEmail: doc.customerEmail,
+    customerContact: doc.customerContact,
     notes: doc.notes,
     customerName: doc.customerName,
     items: doc.items.map((i) => ({
