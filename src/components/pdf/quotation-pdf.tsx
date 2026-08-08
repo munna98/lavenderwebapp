@@ -261,7 +261,6 @@ export default function QuotationPdf({ document: doc, showPartNumber = false }: 
             <Text style={styles.sectionLabel}>Quotation Details</Text>
             <Text style={styles.partyName}>{doc.number}</Text>
             <Text style={styles.addressText}>Date: {dateStr}</Text>
-            <Text style={styles.addressText}>Issued By: Lavender Auto Spare Parts</Text>
             <Text style={styles.addressText}>Prepared by: {doc.createdBy.name}</Text>
             {doc.createdBy.phone && <Text style={styles.addressText}>Mobile: {doc.createdBy.phone}</Text>}
             <Text style={styles.addressText}>Email: lavenderautospareparts@gmail.com</Text>
